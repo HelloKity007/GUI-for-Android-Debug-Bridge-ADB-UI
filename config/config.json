@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "ADB Tool",
+    "version": "2.3.0",
+    "dark_mode": false,
+    "language": "zh_CN"
+  },
+  "adb": {
+    "auto_refresh_devices": true,
+    "refresh_interval": 5
+  },
+  "extensions": {
+    "directory": "extensions",
+    "items": {
+      "adb": {
+        "path": "extensions/android-tools-win-v34/adb.exe",
+        "enabled": true,
+        "description": "Android调试桥"
+      },
+      "scrcpy": {
+        "path": "extensions/scrcpy-win64-v3.3.3/scrcpy.exe",
+        "enabled": true,
+        "description": "Android屏幕投屏"
+      },
+      "jadx": {
+        "path": "extensions/jadx_decompiler/jadx-gui-dev.exe",
+        "enabled": true,
+        "description": "APK反编译工具"
+      },
+      "awesome_adb": {
+        "path": "extensions/awesome-adb-readme/README.md",
+        "enabled": true,
+        "description": "ADB命令手册"
+      }
+    },
+    "plugins": {
+      "directory": "plugins",
+      "auto_load": true,
+      "enabled": [],
+      "disabled": []
+    }
+  },
+  "ui": {
+    "window_size": [1200, 800],
+    "window_position": [100, 100],
+    "log_level": "INFO"
+  }
+}

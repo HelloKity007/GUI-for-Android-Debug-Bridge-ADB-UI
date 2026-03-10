@@ -1,0 +1,514 @@
+{
+  "version": "1.0",
+  "groups": [
+    {
+      "id": "file_transfer",
+      "name": "📁 File Transfer",
+      "order": 1,
+      "buttons": [
+        {
+          "id": "adb_root_remount",
+          "label": "🔐 ADB Root & Remount",
+          "action": "adb_root_remount",
+          "accent": false
+        },
+        {
+          "id": "push_file",
+          "label": "⬆️ Push File to Device",
+          "action": "push_file",
+          "accent": false,
+          "params": [
+            {
+              "name": "source",
+              "type": "file",
+              "label": "源文件",
+              "required": true
+            },
+            {
+              "name": "dest",
+              "type": "text",
+              "label": "目标路径",
+              "required": true,
+              "default": "/sdcard/"
+            }
+          ]
+        },
+        {
+          "id": "pull_file",
+          "label": "⬇️ Pull File from Device",
+          "action": "pull_file",
+          "accent": false,
+          "params": [
+            {
+              "name": "source",
+              "type": "text",
+              "label": "设备路径",
+              "required": true
+            },
+            {
+              "name": "dest",
+              "type": "folder",
+              "label": "保存到",
+              "required": true
+            }
+          ]
+        },
+        {
+          "id": "reboot_copy_38",
+          "label": "🔄 Reboot Device",
+          "action": "reboot_device",
+          "accent": false
+        },
+        {
+          "id": "file_manager",
+          "label": "🗂️ Advanced File Manager",
+          "action": "show_file_browser",
+          "accent": true
+        }
+      ]
+    },
+    {
+      "id": "app_management",
+      "name": "📱 App Management",
+      "order": 3,
+      "buttons": [
+        {
+          "id": "install_apk",
+          "label": "📦 Install APK",
+          "action": "install_apk",
+          "accent": false
+        },
+        {
+          "id": "uninstall_app",
+          "label": "🗑️ Uninstall App",
+          "action": "uninstall_app",
+          "accent": false
+        },
+        {
+          "id": "reinstall_user",
+          "label": "♻️ Reinstall for User",
+          "action": "reinstall_for_user",
+          "accent": false
+        },
+        {
+          "id": "list_apps",
+          "label": "📋 List Installed Apps",
+          "action": "list_apps",
+          "accent": false
+        },
+        {
+          "id": "app_manager",
+          "label": "📱 App List Manager",
+          "action": "show_app_manager",
+          "accent": true
+        },
+        {
+          "id": "open_apks_folder",
+          "label": "📂 Open APKs Folder",
+          "action": "open_apks_folder",
+          "accent": false
+        },
+        {
+          "id": "undo_degoogle",
+          "label": "↩️ Undo DeGoogle",
+          "action": "undo_degoogle",
+          "accent": false
+        },
+        {
+          "id": "degoogle",
+          "label": "🚫 DeGoogle Device",
+          "action": "degoogle_device",
+          "accent": true
+        }
+      ]
+    },
+    {
+      "id": "device_operations",
+      "name": "⚡ Device Operations",
+      "order": 2,
+      "buttons": [
+        {
+          "id": "screenshot",
+          "label": "📸 Take Screenshot",
+          "action": "take_screenshot",
+          "accent": false
+        },
+        {
+          "id": "reboot_recovery",
+          "label": "🔧 Reboot to Recovery",
+          "action": "reboot_recovery",
+          "accent": false
+        },
+        {
+          "id": "reboot_bootloader",
+          "label": "⚙️ Reboot to Bootloader",
+          "action": "reboot_bootloader",
+          "accent": false
+        },
+        {
+          "id": "fastboot_oem_unlock",
+          "label": "🔓 OEM Unlock",
+          "action": "fastboot_oem_unlock",
+          "accent": false
+        },
+        {
+          "id": "fastboot_reboot",
+          "label": "🔁 Fastboot Reboot",
+          "action": "fastboot_reboot",
+          "accent": false
+        },
+        {
+          "id": "reboot_loader",
+          "label": "📦 Reboot to Loader",
+          "action": "reboot_loader",
+          "accent": false
+        },
+        {
+          "id": "adb_root_remount_copy_40",
+          "label": "🔐 ADB Root & Remount",
+          "action": "adb_root_remount",
+          "accent": false
+        },
+        {
+          "id": "reboot_copy_38_copy_39",
+          "label": "🔄 Reboot Device",
+          "action": "reboot_device",
+          "accent": false
+        },
+        {
+          "id": "test_scripts",
+          "label": "🧪 Test Scripts",
+          "action": "show_test_scripts",
+          "accent": true
+        },
+        {
+          "id": "jadx",
+          "label": "🔍 JADX Decompiler",
+          "action": "show_jadx_decompiler",
+          "accent": true
+        },
+        {
+          "id": "factory_menu",
+          "label": "🏭 工厂菜单",
+          "action": "factory_menu",
+          "accent": false
+        }
+      ]
+    },
+    {
+      "id": "developer_options",
+      "name": "🔧 Developer Options",
+      "order": 4,
+      "buttons": [
+        {
+          "id": "dev_enable",
+          "label": "🔓 打开开发者选项",
+          "action": "quick_enable_dev_options",
+          "accent": false
+        },
+        {
+          "id": "dev_disable",
+          "label": "🔒 关闭开发者选项",
+          "action": "quick_disable_dev_options",
+          "accent": false
+        }
+      ]
+    },
+    {
+      "id": "display_settings",
+      "name": "⏱️ Display Settings",
+      "order": 5,
+      "buttons": [
+        {
+          "id": "screen_timeout_get",
+          "label": "⏱️ 获取屏幕休眠时间",
+          "action": "quick_get_screen_timeout",
+          "accent": false
+        },
+        {
+          "id": "screen_timeout_set",
+          "label": "⏰ 设置屏幕休眠时间",
+          "action": "quick_set_screen_timeout",
+          "accent": false
+        },
+        {
+          "id": "open_settings",
+          "label": "⚙️ 启动系统设置",
+          "action": "quick_open_settings",
+          "accent": false
+        },
+        {
+          "id": "adb_keyboard",
+          "label": "⌨️ ADB按键键盘",
+          "action": "quick_adb_input_key",
+          "accent": false
+        }
+      ]
+    },
+    {
+      "id": "fast_actions",
+      "name": "⚡ Fast Actions",
+      "order": 6,
+      "buttons": [
+        {
+          "id": "clear_logcat",
+          "label": "🗑️ Clear Logcat",
+          "action": "quick_clear_logcat",
+          "accent": false
+        },
+        {
+          "id": "airplane_mode",
+          "label": "✈️ Toggle Airplane Mode",
+          "action": "quick_airplane_mode",
+          "accent": false
+        },
+        {
+          "id": "quick_screenshot",
+          "label": "📸 Quick Screenshot",
+          "action": "take_screenshot",
+          "accent": false
+        },
+        {
+          "id": "screen_record",
+          "label": "🎥 Screen Record (30s)",
+          "action": "quick_screen_record",
+          "accent": false
+        }
+      ]
+    },
+    {
+      "id": "device_info",
+      "name": "📱 Device Info",
+      "order": 7,
+      "buttons": [
+        {
+          "id": "battery_status",
+          "label": "🔋 Battery Status",
+          "action": "quick_battery_status",
+          "accent": false
+        },
+        {
+          "id": "device_info",
+          "label": "ℹ️ Device Info",
+          "action": "quick_device_info",
+          "accent": false
+        },
+        {
+          "id": "display_info",
+          "label": "🖥️ Display Info",
+          "action": "quick_display_info",
+          "accent": false
+        },
+        {
+          "id": "cpu_info",
+          "label": "📊 CPU Info",
+          "action": "quick_cpu_info",
+          "accent": false
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "⚡ Performance",
+      "order": 8,
+      "buttons": [
+        {
+          "id": "storage_info",
+          "label": "💾 Storage Info",
+          "action": "quick_storage_info",
+          "accent": false
+        },
+        {
+          "id": "memory_info",
+          "label": "🧠 Memory Info",
+          "action": "quick_memory_info",
+          "accent": false
+        },
+        {
+          "id": "top_processes",
+          "label": "📈 Top Processes",
+          "action": "quick_top_processes",
+          "accent": false
+        }
+      ]
+    },
+    {
+      "id": "network",
+      "name": "🌐 Network",
+      "order": 9,
+      "buttons": [
+        {
+          "id": "ip_address",
+          "label": "🔍 IP Address",
+          "action": "quick_ip_info",
+          "accent": false
+        },
+        {
+          "id": "wifi_info",
+          "label": "📶 WiFi Info",
+          "action": "quick_wifi_info",
+          "accent": false
+        }
+      ]
+    }
+  ],
+  "commands": {
+    "quick_battery_status": "shell dumpsys battery",
+    "quick_device_info": "shell getprop",
+    "quick_display_info": "shell wm size",
+    "quick_storage_info": "shell df -h",
+    "quick_cpu_info": "shell cat /proc/cpuinfo",
+    "quick_memory_info": "shell cat /proc/meminfo",
+    "quick_top_processes": "shell top -n 1",
+    "quick_ip_info": "shell ip addr show wlan0",
+    "quick_wifi_info": "shell dumpsys wifi",
+    "quick_clear_logcat": "logcat -c",
+    "quick_airplane_mode": "shell settings put global airplane_mode_on",
+    "take_screenshot": "shell screencap -p /sdcard/screenshot.png",
+    "quick_screen_record": "shell screenrecord /sdcard/screen.mp4",
+    "reboot_device": "reboot",
+    "reboot_recovery": "reboot recovery",
+    "reboot_bootloader": "reboot bootloader",
+    "reboot_loader": "reboot loader",
+    "factory_menu": "shell am startservice -n com.xbh.factory.menu/.app.TvMenuWindowManagerService -e com.xbh.factory.menu.commmand com.xbh.factory.menu.commmand.factory_menu",
+    "adb_root": "root",
+    "adb_remount": "remount",
+    "quick_enable_dev_options": "shell settings put global development_settings_enabled 1",
+    "quick_disable_dev_options": "shell settings put global development_settings_enabled 0",
+    "quick_get_screen_timeout": "shell settings get system screen_off_timeout",
+    "quick_set_screen_timeout": "shell settings put system screen_off_timeout",
+    "quick_open_settings": "shell am start -a android.settings.SETTINGS"
+  },
+  "keyboard": {
+    "key_rows": [
+      [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "0"
+      ],
+      [
+        "Q",
+        "W",
+        "E",
+        "R",
+        "T",
+        "Y",
+        "U",
+        "I",
+        "O",
+        "P"
+      ],
+      [
+        "A",
+        "S",
+        "D",
+        "F",
+        "G",
+        "H",
+        "J",
+        "K",
+        "L"
+      ],
+      [
+        "Z",
+        "X",
+        "C",
+        "V",
+        "B",
+        "N",
+        "M"
+      ]
+    ],
+    "func_keys": [
+      {
+        "key": "@",
+        "label": "AT"
+      },
+      {
+        "key": ".",
+        "label": "."
+      },
+      {
+        "key": "SPACE",
+        "label": "空格"
+      },
+      {
+        "key": "-",
+        "label": "-"
+      },
+      {
+        "key": "/",
+        "label": "/"
+      }
+    ],
+    "special_keys": [
+      {
+        "keycode": "66",
+        "label": "回车"
+      },
+      {
+        "keycode": "67",
+        "label": "删除"
+      },
+      {
+        "keycode": "3",
+        "label": "Home"
+      },
+      {
+        "keycode": "6",
+        "label": "End"
+      },
+      {
+        "keycode": "4",
+        "label": "返回"
+      },
+      {
+        "keycode": "82",
+        "label": "菜单"
+      },
+      {
+        "keycode": "26",
+        "label": "电源"
+      },
+      {
+        "keycode": "24",
+        "label": "音量+"
+      },
+      {
+        "keycode": "25",
+        "label": "音量-"
+      },
+      {
+        "keycode": "27",
+        "label": "相机"
+      },
+      {
+        "keycode": "5",
+        "label": "拨号"
+      },
+      {
+        "keycode": "19",
+        "label": "↑ 向上"
+      },
+      {
+        "keycode": "20",
+        "label": "↓ 向下"
+      },
+      {
+        "keycode": "21",
+        "label": "← 向左"
+      },
+      {
+        "keycode": "22",
+        "label": "→ 向右"
+      }
+    ]
+  }
+}

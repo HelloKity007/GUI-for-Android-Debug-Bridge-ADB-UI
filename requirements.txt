@@ -3,15 +3,49 @@
 # - Python 3.8 or higher
 # - PyQt6 for modern GUI
 # - ADB (Android Debug Bridge) installed on your system
+# - Scrcpy (optional, for screen mirroring) from https://github.com/Genymobile/scrcpy/releases
 
+# Core GUI Framework
 PyQt6>=6.6.0
+PyQt6-sip>=13.8
+
+# ADB Tools
+adbutils>=2.12.0
+pure-python-adb>=0.3.0.dev0
+
+# HTTP & Network
+requests>=2.32.0
+urllib3>=2.0.0
+certifi>=2024.0.0
+charset-normalizer>=3.0.0
+idna>=3.0
+
+# Cryptography
+pycryptodome>=3.20.0
+
+# Image Processing
+pillow>=10.0.0
+
+# Serial Communication
+pyserial>=3.5
+
+# UI Theme
+darkdetect>=0.8.0
+colorama>=0.4.6
+
+# Utilities
+packaging>=24.0
+deprecation>=2.1.0
+decorator>=5.1.0
+retry2>=0.9.5
 
 # Installation:
 # 1. Install Python 3.8+ from https://www.python.org/downloads/
 # 2. Install dependencies: pip install -r requirements.txt
 # 3. Download Android SDK Platform Tools from: https://developer.android.com/studio/releases/platform-tools
 # 4. Extract the platform-tools folder to a location of your choice
-# 5. On first launch, the application will prompt you to select the platform-tools folder
-# 6. The selected path will be saved in settings.json for future use
-# 7. Enable USB debugging on your Android device (Settings → Developer Options)
-# 8. Connect device via USB and run: python adb_gui.py
+# 5. (Optional) Download Scrcpy from: https://github.com/Genymobile/scrcpy/releases
+# 6. On first launch, the application will prompt you to select the platform-tools folder
+# 7. The selected path will be saved in settings.json for future use
+# 8. Enable USB debugging on your Android device (Settings → Developer Options)
+# 9. Connect device via USB and run: python adb_gui.py

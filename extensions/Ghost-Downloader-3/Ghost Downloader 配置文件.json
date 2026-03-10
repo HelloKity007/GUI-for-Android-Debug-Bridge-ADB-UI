@@ -1,0 +1,41 @@
+{
+    "Download": {
+        "SSLVerify": false,
+        "AutoSpeedUp": true,
+        "DownloadFolder": "E:/program_data/UserData/Download",
+        "HistoryDownloadFolder": [],
+        "MaxReassignSize": 3,
+        "MaxTaskNum": 3,
+        "PreBlockNum": 8,
+        "ProxyServer": "Auto",
+        "SpeedLimitation": 0,
+        "DefaultServerRegion": "广州"
+    },
+    "Software": {
+        "AutoRun": false,
+        "CheckUpdateAtStartUp": false,
+        "ClipboardListener": false,
+        "Geometry": "784,331,889,407"
+    },
+    "Personalization": {
+        "BackgroundEffect": "Mica",
+        "ThemeMode": "System",
+        "DpiScale": 0
+    },
+    "Browser": {
+        "EnableBrowserExtension": true,
+        "EnableRaiseWindowWhenReceiveMsg": false
+    },
+    "QFluentWidgets": {
+        "FontFamilies": [
+            "Segoe UI",
+            "Microsoft YaHei",
+            "PingFang SC"
+        ],
+        "ThemeColor": "#ff006fc4",
+        "ThemeMode": "Auto"
+    },
+    "MainWindow": {
+        "Language": "Auto"
+    }
+}

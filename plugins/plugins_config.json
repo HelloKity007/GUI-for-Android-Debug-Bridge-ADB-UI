@@ -1,0 +1,21 @@
+{
+  "app_manager": {
+    "enabled": true
+  },
+  "device_ops": {
+    "enabled": true
+  },
+  "file_manager": {
+    "enabled": true
+  },
+  "ghost_downloader": {
+    "enabled": true,
+    "module_path": "extensions/Ghost-Downloader-3",
+    "main_script": "Ghost-Downloader-3.py",
+    "config_file": "Ghost Downloader 配置文件.json",
+    "embedded_widget": "app/common/embedded_widget.py"
+  },
+  "device_monitor": {
+    "enabled": true
+  }
+}

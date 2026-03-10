@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+
+# 运行时日志
+logs/
+*.log
+
+# 截图（运行时生成）
+screenshots/
+
+# 用户 APK 文件
+apks/
+
+# 依赖包（wheel 文件，通过 pip 安装）
+deps/
+
+# 第三方二进制工具（体积大，需用户自行下载）
+extensions/android-tools-win-v34/
+extensions/jadx_decompiler/
+extensions/scrcpy-win64-v3.3.3/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
