@@ -8,7 +8,7 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PyQt6.QtWidgets import (QHBoxLayout,
+from PySide6.QtWidgets import (QHBoxLayout,
                                QSizePolicy, QVBoxLayout, QAbstractItemView, QHeaderView, QSpacerItem)
 
 from qfluentwidgets import (PillPushButton, PrimaryPushButton, PushButton, StrongBodyLabel,
@@ -77,10 +77,10 @@ class Ui_UpdateDialog(object):
         self.tableView.setBorderVisible(True)
         self.tableView.setBorderRadius(8)
         self.tableView.setWordWrap(False)
-        self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # ReadOnly
+        self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)  # ReadOnly
         self.tableView.setColumnCount(3)
         self.tableView.verticalHeader().setVisible(False)  # 隐藏垂直表头
-        self.tableView.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)  # 第一列拉伸
+        self.tableView.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)  # 第一列拉伸
 
         self.verticalLayout.addWidget(self.tableView)
 

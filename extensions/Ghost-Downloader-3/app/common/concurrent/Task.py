@@ -1,19 +1,19 @@
 import functools
 from typing import Callable, Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal, QRunnable
+from PySide6.QtCore import QObject, Signal, QRunnable
 
 from .Future import QFuture
 
 
-class _pyqtSignal(QObject):
-    finished = pyqtSignal(object)
+class _Signal(QObject):
+    finished = Signal(object)
 
 
 class QBaseTask(QRunnable):
     def __init__(self, _id: int, future: QFuture, priority):
         super().__init__()
-        self._signal: _pyqtSignal = _pyqtSignal()  # pyqtSignal(object)
+        self._signal: _Signal = _Signal()  # pyqtSignal(object)
         self._future: QFuture = future
         self._id: int = _id
         self._exception: Optional[BaseException] = None

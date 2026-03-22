@@ -14,8 +14,8 @@ from time import sleep, localtime, time_ns
 from urllib.parse import unquote, parse_qs, urlparse
 
 import curl_cffi
-from PyQt6.QtCore import QUrl, QOperatingSystemVersion, Qt
-from PyQt6.QtGui import QDesktopServices
+from PySide6.QtCore import QUrl, QOperatingSystemVersion, Qt
+from PySide6.QtGui import QDesktopServices
 from loguru import logger
 from qfluentwidgets import MessageBox
 
@@ -414,7 +414,7 @@ def getLinkInfo(
 
 
 def bringWindowToTop(window):
-    window.setWindowState(Qt.WindowState.WindowActive)
+    window.setWindowState(Qt.WindowActive)
     window.show()
     window.activateWindow()
     window.raise_()

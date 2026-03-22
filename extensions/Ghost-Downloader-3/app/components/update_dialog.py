@@ -1,7 +1,7 @@
 import curl_cffi
-from PyQt6.QtCore import QThread, pyqtSignal, QVersionNumber
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QTableWidgetItem
+from PySide6.QtCore import QThread, Signal, QVersionNumber
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QTableWidgetItem
 from loguru import logger
 from qfluentwidgets import InfoBar, InfoBarPosition, FluentStyleSheet
 
@@ -12,7 +12,7 @@ from app.components.custom_mask_dialog_base import MaskDialogBase
 
 
 class GetUpdateThread(QThread):
-    gotResponse = pyqtSignal(dict)
+    gotResponse = Signal(dict)
     def __init__(self, parent=None):
         super().__init__(parent)
 

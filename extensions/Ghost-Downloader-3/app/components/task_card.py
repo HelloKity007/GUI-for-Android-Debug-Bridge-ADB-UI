@@ -2,9 +2,9 @@ import hashlib
 import pickle
 from pathlib import Path
 
-from PyQt6.QtCore import QThread, pyqtSignal, QFileInfo, QMimeData, Qt, QUrl
-from PyQt6.QtGui import QPixmap, QDrag
-from PyQt6.QtWidgets import QFileIconProvider, QApplication
+from PySide6.QtCore import QThread, Signal, QFileInfo, QMimeData, Qt, QUrl
+from PySide6.QtGui import QPixmap, QDrag
+from PySide6.QtWidgets import QFileIconProvider, QApplication
 from loguru import logger
 from qfluentwidgets import CardWidget, IndeterminateProgressBar, ProgressBar, MenuAnimationType, RoundMenu, Action
 from qfluentwidgets import FluentIcon as FIF
@@ -37,7 +37,7 @@ class MimeData(QMimeData):
         return self
 
 class TaskCard(CardWidget, Ui_TaskCard):
-    taskStatusChanged = pyqtSignal()
+    taskStatusChanged = Signal()
 
     def __init__(self, url: str, fileName: str, filePath: str, preBlockNum: int, headers: dict, status: str,
                  notCreatedHistoryFile: bool, fileSize: int = -1, parent=None):
@@ -232,13 +232,13 @@ class TaskCard(CardWidget, Ui_TaskCard):
             self.verticalLayout.addWidget(self.progressBar)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.LeftButton:
             self.__clickPos = event.pos()
-        elif event.button() == Qt.MouseButton.RightButton:
+        elif event.button() == Qt.RightButton:
             if self.status == 'finished':
                 clipboard = QApplication.clipboard()
                 menu = RoundMenu(parent=self)
-                menu.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+                menu.setAttribute(Qt.WA_DeleteOnClose)
 
                 openFileAction = Action(FIF.FOLDER, self.tr('打开文件夹'), parent=menu)
                 openFileAction.triggered.connect(lambda: openFile(self.filePath))
@@ -267,13 +267,13 @@ class TaskCard(CardWidget, Ui_TaskCard):
                 pixmap = self.LogoPixmapLabel.pixmap().copy()
                 # Resize
                 size = (48,) * 2
-                pixmap = pixmap.scaled(*size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                pixmap = pixmap.scaled(*size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 drag.setPixmap(pixmap)
-                drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction)
+                drag.exec(Qt.CopyAction | Qt.MoveAction)
         event.accept()
 
     def mouseReleaseEvent(self, e):
-        if e.button() == Qt.MouseButton.LeftButton and self.isPressed and self.status == "finished":
+        if e.button() == Qt.LeftButton and self.isPressed and self.status == "finished":
                 openFile(f"{self.filePath}/{self.fileName}")
         super().mouseReleaseEvent(e)
 
@@ -531,8 +531,8 @@ class TaskCard(CardWidget, Ui_TaskCard):
             self.runCalcHashTask(selected_algorithm)
 
 class CalcHashThread(QThread):
-    calcProgress = pyqtSignal(str)  # 因为C++ int最大值仅支持到2^31 PyQt又没有Qint类 故只能使用str代替
-    returnHash = pyqtSignal(str)
+    calcProgress = Signal(str)  # 因为C++ int最大值仅支持到2^31 PyQt又没有Qint类 故只能使用str代替
+    returnHash = Signal(str)
 
     def __init__(self, fileResolvedPath: str, algorithm: str, parent=None):
         super().__init__(parent=parent)

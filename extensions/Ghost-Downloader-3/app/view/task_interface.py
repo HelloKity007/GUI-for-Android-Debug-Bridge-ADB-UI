@@ -1,7 +1,7 @@
 import sys
 
-from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtWidgets import QWidget, QFrame, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QWidget, QFrame, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy
 from loguru import logger
 from qfluentwidgets import FluentIcon as FIF, PrimaryPushButton, PushButton, InfoBar, \
     InfoBarPosition, ToggleButton
@@ -53,16 +53,16 @@ class TaskInterface(ScrollArea):
 
     def setupUi(self):
         self.setMinimumWidth(816)
-        self.setFrameShape(QFrame.Shape.NoFrame)
+        self.setFrameShape(QFrame.NoFrame)
         self.scrollWidget = QWidget()
         self.scrollWidget.setObjectName("scrollWidget")
         self.scrollWidget.setMinimumWidth(816)
         self.expandLayout = QVBoxLayout(self.scrollWidget)
         self.expandLayout.setObjectName("expandLayout")
-        self.expandLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.expandLayout.setAlignment(Qt.AlignTop)
         self.expandLayout.setContentsMargins(11, 11, 11, 0)
 
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         # 全部开始/暂停 全部删除等其它功能区 TODO 计划任务
         self.horizontalLayout = QHBoxLayout()
@@ -88,7 +88,7 @@ class TaskInterface(ScrollArea):
         self.planTaskToggleButton.setIcon(FIF.CALENDAR)
         self.horizontalLayout.addWidget(self.planTaskToggleButton)
 
-        self.horizontalLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+        self.horizontalLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.allStartButton.setText(self.tr("全部开始"))
         self.allPauseButton.setText(self.tr("全部暂停"))
@@ -107,7 +107,7 @@ class TaskInterface(ScrollArea):
                 InfoBar.error(
                     title=self.tr('错误'),
                     content=self.tr("已创建相同下载链接的任务!"),
-                    orient=Qt.Orientation.Horizontal,
+                    orient=Qt.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
                     # position='Custom',   # NOTE: use custom info bar manager
@@ -121,7 +121,7 @@ class TaskInterface(ScrollArea):
                     InfoBar.error(
                         title=self.tr('错误'),
                         content=self.tr("已创建相同文件名和路径的任务!"),
-                        orient=Qt.Orientation.Horizontal,
+                        orient=Qt.Horizontal,
                         isClosable=True,
                         position=InfoBarPosition.TOP,
                         # position='Custom',   # NOTE: use custom info bar manager
@@ -160,7 +160,7 @@ class TaskInterface(ScrollArea):
         for i in items:
             self.expandLayout.addItem(i)
 
-    @pyqtSlot()
+    @Slot()
     def __handleTaskStatusChange(self):
         """将任务按照 self.__statusOrder 排序;
            进行任务队列处理;

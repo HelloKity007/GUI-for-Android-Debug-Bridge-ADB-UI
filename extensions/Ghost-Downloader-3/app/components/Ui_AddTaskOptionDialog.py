@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
 
-from PyQt6.QtCore import QSize
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QSize
+from PySide6.QtWidgets import (
     QHBoxLayout,
     QSizePolicy,
     QTableWidgetItem,
@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 from qfluentwidgets import FluentIcon as FIF, PlainTextEdit
 from qfluentwidgets import PushButton, SubtitleLabel, TableWidget, RoundMenu, Action, LineEdit, BodyLabel
 from qfluentwidgets.components.widgets.button import PrimarySplitPushButton
-from PyQt6.QtWidgets import QRadioButton, QButtonGroup
+from PySide6.QtWidgets import QRadioButton, QButtonGroup
 
 if sys.platform != "darwin":
     from qfluentwidgets import SmoothScrollArea as ScrollArea
@@ -114,7 +114,7 @@ class Ui_AddTaskOptionDialog(object):
         self.taskTableWidget.setObjectName("taskTableWidget")
         self.taskTableWidget.verticalHeader().setVisible(False)  # 隐藏垂直表头
         self.taskTableWidget.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
+            0, QHeaderView.Stretch
         )  # 第一列拉伸
 
         self.verticalLayout.addWidget(self.taskTableWidget)
@@ -145,9 +145,9 @@ class Ui_AddTaskOptionDialog(object):
         self.yesButton.setObjectName("yesButton")
 
         # Fix PyQt-Fluent-Widgets Bug
-        self.yesButton.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.yesButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         _ = self.yesButton.hBoxLayout.takeAt(0).widget()
-        _.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        _.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.yesButton.hBoxLayout.insertWidget(0, _)
 
         self.yesButton.setEnabled(False)

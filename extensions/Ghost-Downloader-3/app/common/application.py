@@ -2,8 +2,8 @@
 import sys
 import traceback
 
-from PyQt6.QtCore import QSharedMemory, Qt, QEvent
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QSharedMemory, Qt, QEvent
+from PySide6.QtWidgets import QApplication
 from loguru import logger
 
 from .signal_bus import signalBus

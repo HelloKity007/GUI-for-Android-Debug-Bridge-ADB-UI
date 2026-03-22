@@ -68,13 +68,13 @@ logger = setup_logging()
 def log_qt_compat_info():
     """记录Qt兼容层信息"""
     try:
-        import PyQt6.QtCore as QtCore
-        logger.info(f"PyQt6版本: {QtCore.PYQT_VERSION_STR}")
-        logger.info(f"Qt版本: {QtCore.QT_VERSION_STR}")
+        import PySide6.QtCore as QtCore
+        logger.info(f"PySide6版本: {QtCore.__version__}")
+        logger.info(f"Qt版本: {QtCore.qVersion()}")
         
         # 记录关键枚举是否已映射
         key_attrs = [
-            'pyqtSignal', 'pyqtSlot', 'pyqtProperty',
+            'Signal', 'Slot', 'Property',
             'Vertical', 'Horizontal', 'AlignCenter',
             'WA_TranslucentBackground', 'WindowMaximized'
         ]

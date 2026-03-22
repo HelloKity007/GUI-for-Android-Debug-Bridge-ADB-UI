@@ -9,14 +9,17 @@ import threading
 import time
 import json
 from datetime import datetime
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QTextEdit, QMessageBox, QGroupBox, QLineEdit, QListWidget,
     QListWidgetItem, QCheckBox, QComboBox, QSplitter, QWidget,
     QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
     QScrollArea, QGridLayout
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
+from PySide6.QtCore import Qt, QTimer, Signal
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
 
 
 class ClusterControlDialog(QDialog):
@@ -545,7 +548,7 @@ class ClusterControlDialog(QDialog):
             QMessageBox.warning(self, "No Selection", "Please select devices first")
             return
         
-        from PyQt6.QtWidgets import QInputDialog
+        from PySide6.QtWidgets import QInputDialog
         group_name, ok = QInputDialog.getText(self, "New Group", "Group name:")
         
         if ok and group_name:
@@ -704,7 +707,7 @@ class ClusterControlDialog(QDialog):
             QMessageBox.information(self, "No Commands", "No commands to save")
             return
         
-        from PyQt6.QtWidgets import QInputDialog
+        from PySide6.QtWidgets import QInputDialog
         script_name, ok = QInputDialog.getText(self, "Save Script", "Script name:")
         
         if ok and script_name:

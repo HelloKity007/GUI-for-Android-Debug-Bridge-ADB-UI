@@ -8,33 +8,33 @@ from pathlib import Path
 """
 核心转换逻辑 (按执行顺序):
 1.  底层绑定转换:
-    - `sip` -> `sip`
-    - `wrapinstance` -> `wrapinstance`
+    - `shiboken6` -> `sip`
+    - `wrapInstance` -> `wrapinstance`
 2.  核心API转换:
-    - `pyqtSignal` -> `pyqtSignal`
-    - `pyqtSlot` -> `pyqtSlot`
-    - `pyqtProperty` -> `pyqtProperty`
+    - `Signal` -> `pyqtSignal`
+    - `Slot` -> `pyqtSlot`
+    - `Property` -> `pyqtProperty`
 3.  枚举 (Enum) 语法转换 (最关键部分):
     - `QClassName.EnumType.Value` -> `QClassName.Value` (例如: QFileDialog.FileMode.ExistingFiles -> QFileDialog.ExistingFiles)
     - `Qt.EnumType.Value` -> `Qt.Value` (例如: Qt.AlignmentFlag.AlignCenter -> Qt.AlignCenter)
 4.  全局模块名转换:
-    - `PyQt6` -> `PyQt5`
+    - `PySide6` -> `PyQt5`
 """
 
 # 定义替换规则. 顺序至关重要, 从最具体到最通用, 确保不会错误替换.
 REPLACEMENT_RULES = [
-    # 规则 1: 转换底层绑定 (sip -> sip).
+    # 规则 1: 转换底层绑定 (shiboken6 -> sip).
     # PyQt5使用sip, PySide6使用shiboken6. wrapInstance函数名也需小写.
     (re.compile(r'\bshiboken6\b'), 'sip'),
     (re.compile(r'\bwrapInstance\b'), 'wrapinstance'),
 
-    # 规则 2: 转换 pyqtSignal, pyqtSlot 和 pyqtProperty.
+    # 规则 2: 转换 Signal, Slot 和 Property.
     # 使用负向前瞻 `(?!pyqt)` 避免重复替换, 例如将 `pyqtSignal` 错误地再次处理.
-    (re.compile(r'\b(?!pyqt)pyqtSignal\b'), 'pyqtSignal'),
-    (re.compile(r'\b(?!pyqt)pyqtSlot\b'), 'pyqtSlot'),
-    (re.compile(r'\b(?!pyqt)pyqtProperty\b'), 'pyqtProperty'),
+    (re.compile(r'\b(?!pyqt)Signal\b'), 'pyqtSignal'),
+    (re.compile(r'\b(?!pyqt)Slot\b'), 'pyqtSlot'),
+    (re.compile(r'\b(?!pyqt)Property\b'), 'pyqtProperty'),
 
-    # 规则 3: 转换 PyQt6 风格的枚举 (Enum). 这是确保运行正确的关键.
+    # 规则 3: 转换 PySide6 风格的枚举 (Enum). 这是确保运行正确的关键.
     # 规则 3a: 处理 QClassName 内的枚举, 例如 `QFileDialog.FileMode.ExistingFiles`.
     # 模式匹配: (QClassName).(EnumTypeName).(EnumValue) -> \1.\3 (即 QClassName.EnumValue).
     (re.compile(r'\b(Q[A-Z][a-zA-Z0-9_]+)\.([A-Z][a-zA-Z]+)\.([a-zA-Z0-9_]+)\b'), r'\1.\3'),
@@ -44,7 +44,7 @@ REPLACEMENT_RULES = [
     (re.compile(r'\bQt\.([A-Z][a-zA-Z]+)\.(?!emit|connect|disconnect|sender)([a-zA-Z0-9_]+)\b'), r'Qt.\2'),
     
     # 规则 4: 全局替换模块名. 必须在所有规则之后执行.
-    (re.compile(r'PyQt6'), 'PyQt5'),
+    (re.compile(r'PySide6'), 'PyQt5'),
 ]
 
 def convert_file_content(content: str) -> str:
@@ -112,10 +112,10 @@ def process_directory(source_dir: Path, output_dir: Path):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="自动将 PyQt6 Python 项目转换为 PyQt5 项目.",
+        description="自动将 PySide6 Python 项目转换为 PyQt5 项目.",
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("source_dir", type=str, help="包含 PyQt6 项目的源目录.")
+    parser.add_argument("source_dir", type=str, help="包含 PySide6 项目的源目录.")
     parser.add_argument(
         "-o", "--output_dir", type=str,
         help="用于保存转换后的 PyQt5 项目的目标目录.\n如果未提供, 将自动创建 '源目录名_pyqt5'."

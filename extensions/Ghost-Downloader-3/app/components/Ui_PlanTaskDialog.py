@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import (QHBoxLayout)
+from PySide6.QtWidgets import (QHBoxLayout)
 
 from qfluentwidgets import (LineEdit, PrimaryToolButton, RadioButton, SubtitleLabel, FluentIcon)
 

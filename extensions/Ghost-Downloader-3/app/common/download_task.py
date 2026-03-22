@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import Thread
 
 import curl_cffi
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtCore import QThread, Signal
 from loguru import logger
 
 from app.common.config import cfg
@@ -37,14 +37,14 @@ class DownloadTask(QThread):
     """Task Manager
     self.fileSize == -1 表示自动获取; == 0 表示不能并行下载; else 表示正常"""
 
-    taskInited = pyqtSignal(bool)  # 线程初始化成功, 并传递是否支持并行下载的信息
-    # processChange = pyqtSignal(str)  # 目前进度 且因为C++ int最大值仅支持到2^31 PyQt又没有Qint类 故只能使用str代替
-    workerInfoChanged = pyqtSignal(list)  # 目前进度 v3.2版本引进了分段式进度条
-    speedChanged = pyqtSignal(
+    taskInited = Signal(bool)  # 线程初始化成功, 并传递是否支持并行下载的信息
+    # processChange = Signal(str)  # 目前进度 且因为C++ int最大值仅支持到2^31 PyQt又没有Qint类 故只能使用str代替
+    workerInfoChanged = Signal(list)  # 目前进度 v3.2版本引进了分段式进度条
+    speedChanged = Signal(
         int
     )  # 平均速度 因为 autoSpeedUp 功能需要实时计算平均速度 v3.4.4 起移入后端计算速度, 每秒速度可能超过 2^31 Bytes 吗？
-    taskFinished = pyqtSignal()  # 内置信号的不好用
-    gotWrong = pyqtSignal(str)  # 😭 我出问题了
+    taskFinished = Signal()  # 内置信号的不好用
+    gotWrong = Signal(str)  # 😭 我出问题了
 
     def __init__(
         self,

@@ -6,15 +6,18 @@ import os
 import threading
 import json
 from datetime import datetime
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QLabel, QLineEdit, QMessageBox, QMenu, QFileDialog,
     QListWidget, QListWidgetItem, QSplitter, QProgressBar, QTableWidget,
     QTableWidgetItem, QHeaderView, QComboBox, QTextEdit, QGroupBox,
     QCheckBox, QTabWidget, QWidget
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QMimeData
-from PyQt6.QtGui import QFont, QDrag, QCursor
+from PySide6.QtCore import Qt, QTimer, Signal, QMimeData
+from PySide6.QtGui import QFont, QDrag, QCursor
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
 
 
 class FileManagerDialog(QDialog):
@@ -632,7 +635,7 @@ class FileManagerDialog(QDialog):
         file_info = name_item.data(Qt.ItemDataRole.UserRole)
         old_name = file_info['name']
         
-        from PyQt6.QtWidgets import QInputDialog
+        from PySide6.QtWidgets import QInputDialog
         new_name, ok = QInputDialog.getText(self, "Rename", "New name:", text=old_name)
         
         if ok and new_name:

@@ -1,8 +1,8 @@
 import json
 
-from PyQt6.QtCore import QObject, pyqtSlot
-from PyQt6.QtNetwork import QHostAddress
-from PyQt6.QtWebSockets import QWebSocketServer
+from PySide6.QtCore import QObject, Slot
+from PySide6.QtNetwork import QHostAddress
+from PySide6.QtWebSockets import QWebSocketServer
 from loguru import logger
 
 from app.common.config import VERSION, LATEST_EXTENSION_VERSION, cfg
@@ -25,7 +25,7 @@ class GhostDownloaderSocketServer(QObject):
         self.clients = []
         self._mainWindow = parent
 
-    @pyqtSlot()
+    @Slot()
     def onNewConnection(self):
         client = self.server.nextPendingConnection()
         logger.debug(f"New client connected: {client.peerAddress().toString()}:{client.peerPort()}")
@@ -37,14 +37,14 @@ class GhostDownloaderSocketServer(QObject):
 
         self.clients.append(client)
 
-    @pyqtSlot()
+    @Slot()
     def onClientDisconnected(self):
         client = self.sender()  # 获取断开的客户端
         if client in self.clients:
             self.clients.remove(client)  # 从列表中移除断开的客户端
             logger.debug(f"Client disconnected: {client.peerAddress().toString()}:{client.peerPort()}")
 
-    @pyqtSlot(str)
+    @Slot(str)
     def processTextMessage(self, message: str):
         """处理客户端发送的消息"""
         try:

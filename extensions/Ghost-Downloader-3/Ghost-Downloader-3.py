@@ -39,8 +39,8 @@ app = SingletonApplication(sys.argv, "Ghost Downloader")
 import time
 import warnings
 
-from PyQt6.QtCore import QTimer, QTranslator
-from PyQt6.QtGui import QColor
+from PySide6.QtCore import QTimer, QTranslator
+from PySide6.QtGui import QColor
 from loguru import logger
 from qframelesswindow.utils import getSystemAccentColor
 from qfluentwidgets import setTheme, Theme, setThemeColor

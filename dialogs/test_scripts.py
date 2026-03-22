@@ -8,13 +8,16 @@ import threading
 import time
 import csv
 from datetime import datetime
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QTextEdit, QMessageBox, QFileDialog, QGroupBox, QLineEdit,
     QComboBox, QSpinBox, QCheckBox, QTabWidget, QWidget,
     QTableWidget, QTableWidgetItem, QProgressBar
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
+from PySide6.QtCore import Qt, QTimer, Signal
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
 
 
 class TestScriptsDialog(QDialog):

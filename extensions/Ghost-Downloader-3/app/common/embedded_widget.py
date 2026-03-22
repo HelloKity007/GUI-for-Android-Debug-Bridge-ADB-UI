@@ -6,18 +6,21 @@ Ghost Downloader 嵌入式界面
 import sys
 import os
 
-# 在导入任何 PyQt6 模块之前，先设置兼容层
+# 在导入任何 PySide6 模块之前，先设置兼容层
 import app.common.qt_compat as qt_compat
 
 # Path 必须在 qt_compat 之后导入，避免被通配符导入覆盖
 from pathlib import Path
 
-from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QTextEdit, QFileDialog, QMessageBox, QScrollArea, QInputDialog
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer
-from PyQt6.QtGui import QFont
+from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtGui import QFont
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
 
 # 导入 Ghost Downloader 核心组件
 try:
@@ -124,7 +127,7 @@ class EmbeddedDownloaderWidget(QWidget):
         try:
             return cfg.downloadFolder.value
         except:
-            from PyQt6.QtCore import QStandardPaths
+            from PySide6.QtCore import QStandardPaths
             return QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation)
     
     def _show_add_task_dialog(self):

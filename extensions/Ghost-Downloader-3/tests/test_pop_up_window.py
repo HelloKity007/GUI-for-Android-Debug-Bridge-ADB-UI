@@ -2,9 +2,9 @@ import sys
 from os.path import dirname
 from pathlib import Path
 
-from PyQt6.QtCore import QStandardPaths, QFileInfo, QTimer, QResource, Qt, QUrl
-from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QFileIconProvider
+from PySide6.QtCore import QStandardPaths, QFileInfo, QTimer, QResource, Qt, QUrl
+from PySide6.QtGui import QDesktopServices
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QFileIconProvider
 from desktop_notifier import DesktopNotifierSync, Icon, Button
 
 # noinspection PyUnresolvedReferences

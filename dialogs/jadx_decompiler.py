@@ -17,14 +17,17 @@ import shutil
 import json
 from datetime import datetime
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton,
     QLineEdit, QTextEdit, QListWidget, QListWidgetItem, QFileDialog,
     QMessageBox, QGroupBox, QProgressBar, QComboBox, QTabWidget, QWidget,
     QTreeWidget, QTreeWidgetItem, QSplitter, QFrame, QCheckBox, QMenu
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer
-from PyQt6.QtGui import QFont, QColor, QAction
+from PySide6.QtCore import Qt, Signal, QThread, QTimer
+from PySide6.QtGui import QFont, QColor, QAction
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
 
 
 class JadxWorker(QThread):
@@ -972,7 +975,7 @@ class JadxDecompilerDialog(QDialog):
 
 # 用于独立运行
 if __name__ == '__main__':
-    from PyQt6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     import sys
     
     app = QApplication(sys.argv)

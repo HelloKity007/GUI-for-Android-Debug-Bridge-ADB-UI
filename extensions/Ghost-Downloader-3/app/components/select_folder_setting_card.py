@@ -1,5 +1,6 @@
-from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt6.QtWidgets import QFileDialog
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtGui import Qt
+from PySide6.QtWidgets import QFileDialog
 from qfluentwidgets import EditableComboBox, ToolButton, FluentIcon as FIF, SettingCard, ConfigItem
 
 from ..common.config import cfg
@@ -14,7 +15,7 @@ def connectList(l1, l2):
 
 class HistoryPathComboBox(EditableComboBox):
     """自定义可编辑组合框，支持默认项和历史记录功能"""
-    pathChanged = pyqtSignal(str)  # 路径改变信号
+    pathChanged = Signal(str)  # 路径改变信号
 
     def __init__(self, parent=None, default:str="", memory:list=None):
         super().__init__(parent)
@@ -80,7 +81,7 @@ class HistoryPathComboBox(EditableComboBox):
 
 class SelectFolderSettingCard(SettingCard):
     """下载路径设置卡片组件"""
-    pathChanged = pyqtSignal(str)  # 路径修改信号
+    pathChanged = Signal(str)  # 路径修改信号
 
     def __init__(self, defaultItem: ConfigItem, memoryItem: ConfigItem, parent=None):
         super().__init__(FIF.DOWNLOAD, self.tr("下载路径"), cfg.downloadFolder.value, parent)
@@ -98,9 +99,9 @@ class SelectFolderSettingCard(SettingCard):
         self.chooseFolderButton.clicked.connect(self.__chooseFolder)
 
         # 布局设置
-        self.hBoxLayout.addWidget(self.editableComboBox, 0, Qt.AlignmentFlag.AlignRight)
+        self.hBoxLayout.addWidget(self.editableComboBox, 0, Qt.AlignRight)
         self.hBoxLayout.addSpacing(5)
-        self.hBoxLayout.addWidget(self.chooseFolderButton, 0, Qt.AlignmentFlag.AlignRight)
+        self.hBoxLayout.addWidget(self.chooseFolderButton, 0, Qt.AlignRight)
         self.hBoxLayout.addSpacing(16)
 
         self.editableComboBox.flashList()
@@ -126,7 +127,7 @@ class SelectFolderSettingCard(SettingCard):
                 path == self.editableComboBox.default or
                 path in self.editableComboBox.memory)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def __updatePath(self, path: str):
         """更新当前路径"""
         if not self.__isPathExists(path):

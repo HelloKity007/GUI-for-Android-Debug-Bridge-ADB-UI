@@ -4,13 +4,16 @@ App Manager Dialog for ADB GUI
 """
 import os
 import threading
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QLabel, QLineEdit, QMessageBox, QMenu, QCheckBox,
     QProgressDialog
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QFont
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QFont
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
 
 
 class AppManagerDialog(QDialog):

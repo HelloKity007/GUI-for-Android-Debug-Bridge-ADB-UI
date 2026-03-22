@@ -8,8 +8,8 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PyQt6.QtCore import (QSize, Qt)
-from PyQt6.QtWidgets import (QHBoxLayout, QSizePolicy, QVBoxLayout)
+from PySide6.QtCore import (QSize, Qt)
+from PySide6.QtWidgets import (QHBoxLayout, QSizePolicy, QVBoxLayout)
 from qfluentwidgets import FluentIcon as FIF, SubtitleLabel
 from qfluentwidgets import (PixmapLabel, ToolButton, PrimaryToolButton)
 

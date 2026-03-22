@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"E:/code_local/python/GUI-for-Android-Debug-Bridge-ADB-UI-main\"/*.py 2>/dev/null || echo \"No .py files in root\")",
+      "Bash(ls -la \"E:/code_local/python/GUI-for-Android-Debug-Bridge-ADB-UI-main\"/*.md 2>/dev/null || echo \"No .md files in root\")",
+      "Bash(find \"E:/code_local/python/GUI-for-Android-Debug-Bridge-ADB-UI-main\" -maxdepth 2 -name \"*.py\" -type f 2>/dev/null | head -20)",
+      "Bash(find /e/code_local/python/GUI-for-Android-Debug-Bridge-ADB-UI-main -name \"*.py\" -o -name \"requirements*.txt\" -o -name \"*.toml\" 2>/dev/null | head -20)",
+      "Bash(find /e/code_local/python/GUI-for-Android-Debug-Bridge-ADB-UI-main -name \"*.pyc\" -type f 2>/dev/null | head -30)"
+    ]
+  }
+}

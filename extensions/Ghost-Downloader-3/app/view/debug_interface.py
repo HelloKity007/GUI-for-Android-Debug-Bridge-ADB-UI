@@ -1,8 +1,8 @@
 import sys
 import time
 
-from PyQt6.QtGui import QTextCursor
-from PyQt6.QtWidgets import QVBoxLayout, QWidget, QFileDialog
+from PySide6.QtGui import QTextCursor
+from PySide6.QtWidgets import QVBoxLayout, QWidget, QFileDialog
 from qfluentwidgets import TextEdit, PushButton
 
 

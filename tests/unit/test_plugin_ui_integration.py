@@ -9,8 +9,8 @@ from unittest.mock import Mock, MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QMenu, QMenuBar
-from PyQt6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMainWindow, QMenu, QMenuBar
+from PySide6.QtCore import Qt
 
 from framework.plugin.plugin_manager import PluginManager
 from framework.event.event_bus import EventBus

@@ -4,9 +4,9 @@ import requests
 from pathlib import Path
 from threading import Thread
 
-from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QEvent
-from PyQt6.QtGui import QColor, QResizeEvent
-from PyQt6.QtWidgets import QFileDialog, QTableWidgetItem
+from PySide6.QtCore import Signal, Qt, QTimer, QEvent
+from PySide6.QtGui import QColor, QResizeEvent
+from PySide6.QtWidgets import QFileDialog, QTableWidgetItem
 from qfluentwidgets import (
     PushSettingCard,
     RangeSettingCard,
@@ -77,10 +77,10 @@ class AddTaskOptionDialog(MaskDialogBase, Ui_AddTaskOptionDialog):
 
     _instance = None  # type: 'AddTaskOptionDialog'
     _initialized: bool = False  # 记录是否被 close
-    __addTableRowSignal = pyqtSignal(
+    __addTableRowSignal = Signal(
         str, str, str
     )  # fileName, fileSize, Url, 同理因为int最大值仅支持到2^31 PyQt无法定义int64 故只能使用str代替
-    __gotWrong = pyqtSignal(str, int)  # error, index
+    __gotWrong = Signal(str, int)  # error, index
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -133,7 +133,7 @@ class AddTaskOptionDialog(MaskDialogBase, Ui_AddTaskOptionDialog):
         elif obj is self.windowMask:
             if (
                 e.type() == QEvent.MouseButtonRelease
-                and e.button() == Qt.MouseButton.LeftButton
+                and e.button() == Qt.LeftButton
                 and self.isClosableOnMaskClicked()
             ):
                 self.close()
@@ -208,7 +208,7 @@ class AddTaskOptionDialog(MaskDialogBase, Ui_AddTaskOptionDialog):
         InfoBar.error(
             title=self.tr("错误"),
             content=self.tr("解析第 {} 个链接时遇到错误: {}").format(index, error),
-            orient=Qt.Orientation.Horizontal,
+            orient=Qt.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,
             duration=10000,
@@ -309,7 +309,7 @@ class AddTaskOptionDialog(MaskDialogBase, Ui_AddTaskOptionDialog):
                 InfoBar.warning(
                     title=self.tr("警告"),
                     content=self.tr(f"任务ID [{task_id}] 解析失败: {error}"),
-                    orient=Qt.Orientation.Horizontal,
+                    orient=Qt.Horizontal,
                     isClosable=True,
                     parent=self
                 )
@@ -318,7 +318,7 @@ class AddTaskOptionDialog(MaskDialogBase, Ui_AddTaskOptionDialog):
             InfoBar.success(
                 title=self.tr("成功"),
                 content=self.tr(f"从 {total_tasks} 个任务ID共解析出 {total_urls} 个下载链接"),
-                orient=Qt.Orientation.Horizontal,
+                orient=Qt.Horizontal,
                 isClosable=True,
                 parent=self
             )
@@ -457,7 +457,7 @@ class AddTaskOptionDialog(MaskDialogBase, Ui_AddTaskOptionDialog):
         _.setData(2, fileName)  # 设置默认值, 当用户修改后的内容为空是，使用默认值替换
         self.taskTableWidget.setItem(self.taskTableWidget.rowCount() - 1, 0, _)
         _ = QTableWidgetItem(getReadableSize(int(fileSize)))
-        _.setFlags(Qt.ItemFlag.ItemIsEnabled)  # 禁止编辑
+        _.setFlags(Qt.ItemIsEnabled)  # 禁止编辑
         self.taskTableWidget.setItem(self.taskTableWidget.rowCount() - 1, 1, _)
 
         # self.taskTableWidget.resizeColumnsToContents()
@@ -519,7 +519,7 @@ class AddTaskOptionDialog(MaskDialogBase, Ui_AddTaskOptionDialog):
                     InfoBar.warning(
                         title=self.tr("警告"),
                         content=self.tr("第{}个链接无效!").format(index),
-                        orient=Qt.Orientation.Horizontal,
+                        orient=Qt.Horizontal,
                         isClosable=True,
                         position=InfoBarPosition.TOP,
                         duration=1000,

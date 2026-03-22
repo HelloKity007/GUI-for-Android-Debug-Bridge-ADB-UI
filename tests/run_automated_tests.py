@@ -13,8 +13,8 @@ from datetime import datetime
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
 
 
 class TestResult:

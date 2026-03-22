@@ -1,7 +1,7 @@
 import darkdetect
-from PyQt6.QtCore import QSize, QRect, QTimer, Qt
-from PyQt6.QtGui import QPainter, QIcon
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QSize, QRect, QTimer
+from PySide6.QtGui import QPainter, Qt, QIcon
+from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QStyleFactory,

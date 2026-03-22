@@ -3,13 +3,16 @@
 Plugin Manager Dialog - 插件管理对话框
 提供插件的查看、启用/禁用、配置功能
 """
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QMessageBox, QHeaderView, QWidget, QTextEdit,
     QSplitter, QGroupBox
 )
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
 from typing import Optional
 
 

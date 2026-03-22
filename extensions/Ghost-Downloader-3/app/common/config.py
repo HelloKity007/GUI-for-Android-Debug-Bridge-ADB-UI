@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 from re import compile
 
-from PyQt6.QtCore import QRect, QStandardPaths, QLocale
+from PySide6.QtCore import QRect, QStandardPaths, QLocale
 from qfluentwidgets import (
     QConfig,
     ConfigItem,
@@ -100,7 +100,7 @@ class Config(QConfig):
     downloadFolder = ConfigItem(
         "Download",
         "DownloadFolder",
-        QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation),
+        QStandardPaths.writableLocation(QStandardPaths.DownloadLocation),
         FolderValidator(),
     )
     historyDownloadFolder = ConfigItem(

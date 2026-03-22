@@ -2,9 +2,9 @@
 # 确保兼容层先加载
 import app.common.qt_compat as _qt_compat
 
-from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QEvent
-from PyQt6.QtGui import QColor, QResizeEvent
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QEvent
+from PySide6.QtGui import QColor, QResizeEvent
+from PySide6.QtWidgets import (
     QDialog,
     QGraphicsDropShadowEffect,
     QGraphicsOpacityEffect,
@@ -27,8 +27,8 @@ class MaskDialogBase(QDialog):
         # dialog box in the center of mask, all widgets take it as parent
         self.widget = ScrollArea(self)
         self.widget.setObjectName("centerWidget")
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
         self.setGeometry(0, 0, parent.width(), parent.height())
 
         c = 0 if isDarkTheme() else 255
@@ -107,7 +107,7 @@ class MaskDialogBase(QDialog):
         elif obj is self.windowMask:
             if (
                 e.type() == QEvent.MouseButtonRelease
-                and e.button() == Qt.MouseButton.LeftButton
+                and e.button() == Qt.LeftButton
                 and self.isClosableOnMaskClicked()
             ):
                 self.reject()

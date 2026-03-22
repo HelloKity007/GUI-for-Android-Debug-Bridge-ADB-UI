@@ -2,10 +2,10 @@ import sys
 from os.path import dirname, basename
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QUrl, QTimer, QEasingCurve, QPropertyAnimation, QRect, QFileInfo, QObject, \
+from PySide6.QtCore import Qt, QUrl, QTimer, QEasingCurve, QPropertyAnimation, QRect, QFileInfo, QObject, \
     QStandardPaths, QResource
-from PyQt6.QtGui import QPixmap, QPainter, QColor, QPainterPath
-from PyQt6.QtWidgets import QWidget, QFileIconProvider, QPushButton, QToolButton
+from PySide6.QtGui import QPixmap, QPainter, QColor, QPainterPath
+from PySide6.QtWidgets import QWidget, QFileIconProvider, QPushButton, QToolButton
 from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets.common.screen import getCurrentScreenGeometry
 from qframelesswindow import WindowEffect
@@ -76,9 +76,9 @@ class PopUpWindowBase(QWidget, Ui_PopUpWindow):
         super().__init__(parent=None)
 
         self.setupUi(self)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool | Qt.WindowType.WindowDoesNotAcceptFocus)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool | Qt.WindowDoesNotAcceptFocus)
 
         # Acrylic Effect
         self.windowEffect = WindowEffect(self)
@@ -142,7 +142,7 @@ class PopUpWindowBase(QWidget, Ui_PopUpWindow):
         self.logoLabel.setPixmap(self.logoPixmap)
         self.logoLabel.setFixedSize(16, 16)
 
-        # Connect pyqtSignal To pyqtSlot
+        # Connect Signal To Slot
         self.closeBtn.clicked.connect(self.__moveOut)
 
         self.screenGeometry = getCurrentScreenGeometry()
@@ -175,7 +175,7 @@ class PopUpWindowBase(QWidget, Ui_PopUpWindow):
     def _playSound(self):
         # 设置音效
         if isGreaterEqualWin10():
-            from PyQt6.QtMultimedia import QSoundEffect
+            from PySide6.QtMultimedia import QSoundEffect
             self.soundEffect = QSoundEffect(self)
             self.soundEffect.setSource(QUrl.fromLocalFile(r":/res/completed_task.wav"))
             self.soundEffect.setVolume(100)
@@ -213,13 +213,13 @@ class PopUpWindowBase(QWidget, Ui_PopUpWindow):
 
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.LeftButton:
             self.dragStartPosition = event.globalPosition().toPoint()
         super().mousePressEvent(event)
 
 
     def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.MouseButton.LeftButton:
+        if event.buttons() == Qt.LeftButton:
             deltaX = event.globalPosition().x() - self.dragStartPosition.x()
             maxX = self.screenGeometry.width() - self.width() - 13
             newX = maxX + deltaX
@@ -234,7 +234,7 @@ class PopUpWindowBase(QWidget, Ui_PopUpWindow):
 
 
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.LeftButton:
             # 拖动到超过阈值时松手后触发 self.__moveOut
             if self.pos().x() > (self.screenGeometry.width() - self.width() + 150):
                 self.__moveOut()
@@ -320,7 +320,7 @@ class ReceivedPopUpWindow(PopUpWindowBase):
     def _playSound(self):
         # 设置音效
         if isGreaterEqualWin10():
-            from PyQt6.QtMultimedia import QSoundEffect
+            from PySide6.QtMultimedia import QSoundEffect
             self.soundEffect = QSoundEffect(self)
             self.soundEffect.setSource(QUrl.fromLocalFile(r":/res/received_info.wav"))
             self.soundEffect.setVolume(100)

@@ -1,8 +1,8 @@
 import os
 import sys
 
-from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtWidgets import QFileDialog, QApplication
+from PySide6.QtCore import Signal, Qt
+from PySide6.QtWidgets import QFileDialog, QApplication
 from qfluentwidgets import CheckBox, MessageBox, ComboBox, MessageBoxBase, SubtitleLabel, InfoBar, InfoBarPosition, \
     PlainTextEdit
 
@@ -33,7 +33,7 @@ class CustomInputDialog(MessageBox):
         super().__init__(title, content, parent)
         self.widget.setFixedSize(300, 150)
         self.setClosableOnMaskClicked(True)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.comboBox = ComboBox(self)
         self.comboBox.addItems(items)
@@ -46,12 +46,12 @@ class CustomInputDialog(MessageBox):
 
 
 class EditHeadersDialog(MessageBoxBase):
-    headersUpdated = pyqtSignal(dict)
+    headersUpdated = Signal(dict)
 
     def __init__(self, parent=None, initialHeaders=None):
         super().__init__(parent=parent)
         self.setClosableOnMaskClicked(True)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.widget.setFixedSize(400, 500)
 
@@ -105,7 +105,7 @@ class PlanTaskDialog(MessageBoxBase, Ui_PlanTaskDialog):
         self.setupUi(self.viewLayout)
         self.widget.setFixedSize(410, 275)
 
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setClosableOnMaskClicked(True)
 
         # Connect signals to slots

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 qt_compat 兼容层测试
-TDD 测试用例 - 验证 PyQt6/PyQt6 兼容性
+TDD 测试用例 - 验证 PySide6 兼容性
 """
 import sys
 import pytest
@@ -9,84 +9,85 @@ import pytest
 
 class TestQtCompatBasic:
     """基础兼容性测试"""
-    
+
     def test_import_qt_compat(self):
         """测试 qt_compat 模块可导入"""
-        # 先移除已导入的模块，确保干净测试
-        modules_to_remove = [k for k in sys.modules.keys() if 'qt_compat' in k or 'PyQt6' in k or 'PyQt6' in k]
-        for mod in modules_to_remove:
-            del sys.modules[mod]
-        
         import app.common.qt_compat as qt_compat
         assert qt_compat is not None
-    
+
     def test_signal_available(self):
-        """测试 pyqtSignal 是否可用"""
-        modules_to_remove = [k for k in sys.modules.keys() if 'qt_compat' in k]
-        for mod in modules_to_remove:
-            del sys.modules[mod]
-        
+        """测试 Signal 是否可用"""
         import app.common.qt_compat as qt_compat
-        from PyQt6.QtCore import pyqtSignal
-        
-        # pyqtSignal 应该是 pyqtSignal 的别名
-        assert hasattr(qt_compat, 'pyqtSignal')
-        assert qt_compat.pyqtSignal == pyqtSignal
-    
+        from PySide6.QtCore import Signal
+
+        # Signal 应该在兼容层中可用
+        assert hasattr(qt_compat, 'Signal')
+        assert qt_compat.Signal == Signal
+
     def test_slot_available(self):
-        """测试 pyqtSlot 是否可用"""
-        modules_to_remove = [k for k in sys.modules.keys() if 'qt_compat' in k]
-        for mod in modules_to_remove:
-            del sys.modules[mod]
-        
+        """测试 Slot 是否可用"""
         import app.common.qt_compat as qt_compat
-        from PyQt6.QtCore import pyqtSlot
-        
+        from PySide6.QtCore import Slot
+
+        assert hasattr(qt_compat, 'Slot')
+        assert qt_compat.Slot == Slot
+
+    def test_pyqtsignal_alias(self):
+        """测试 pyqtSignal 别名是否可用"""
+        import app.common.qt_compat as qt_compat
+        from PySide6.QtCore import Signal
+
+        assert hasattr(qt_compat, 'pyqtSignal')
+        assert qt_compat.pyqtSignal == Signal
+
+    def test_pyqtslot_alias(self):
+        """测试 pyqtSlot 别名是否可用"""
+        import app.common.qt_compat as qt_compat
+        from PySide6.QtCore import Slot
+
         assert hasattr(qt_compat, 'pyqtSlot')
-        assert qt_compat.pyqtSlot == pyqtSlot
+        assert qt_compat.pyqtSlot == Slot
 
 
 class TestQFontCompatibility:
     """QFont 兼容性测试"""
-    
+
     def test_qfont_weight_enum(self):
-        """测试 QFont.Weight 枚举是否可用"""
-        from PyQt6.QtGui import QFont
-        
-        # PyQt6 中使用 QFont.Weight.Normal
+        """测试 QFont.Weight 枚举可访问"""
+        from PySide6.QtGui import QFont
         assert hasattr(QFont, 'Weight')
         assert hasattr(QFont.Weight, 'Normal')
-    
-    def test_qfont_normal_accessible(self):
-        """测试 QFont.Normal 是否可通过兼容层访问"""
-        modules_to_remove = [k for k in sys.modules.keys() if 'qt_compat' in k]
-        for mod in modules_to_remove:
-            del sys.modules[mod]
-        
-        import app.common.qt_compat as qt_compat
-        
-        # 重新导入 QFont
-        from PyQt6.QtGui import QFont
-        
-        # 兼容层应该提供 QFont.Normal 访问
-        # 在 PyQt6 中，Normal 是 QFont.Weight.Normal
-        normal_weight = QFont.Weight.Normal
-        assert normal_weight is not None
+        assert hasattr(QFont.Weight, 'Bold')
 
 
-class TestPathImport:
-    """Path 导入测试"""
-    
-    def test_path_importable_after_qt_compat(self):
-        """测试在 qt_compat 之后 Path 仍可导入"""
-        import app.common.qt_compat as qt_compat
-        from pathlib import Path
-        
-        # Path 应该是 pathlib.Path
-        assert Path is not None
-        p = Path(".")
-        assert str(p) == "."
+class TestQtEnumCompatibility:
+    """Qt 枚举兼容性测试"""
+
+    def test_qt_orientation(self):
+        """测试 Qt.Vertical 和 Qt.Horizontal"""
+        from PySide6.QtCore import Qt
+        assert hasattr(Qt, 'Vertical')
+        assert hasattr(Qt, 'Horizontal')
+
+    def test_qt_alignment(self):
+        """测试 Qt 对齐枚举"""
+        from PySide6.QtCore import Qt
+        assert hasattr(Qt, 'AlignCenter')
+        assert hasattr(Qt, 'AlignLeft')
+        assert hasattr(Qt, 'AlignRight')
+
+    def test_qstandardpaths_location(self):
+        """测试 QStandardPaths 位置枚举"""
+        from PySide6.QtCore import QStandardPaths
+        assert hasattr(QStandardPaths, 'DownloadLocation')
+        assert hasattr(QStandardPaths, 'HomeLocation')
+
+    def test_qeasingcurve_type(self):
+        """测试 QEasingCurve 类型枚举"""
+        from PySide6.QtCore import QEasingCurve
+        assert hasattr(QEasingCurve, 'OutCubic')
+        assert hasattr(QEasingCurve, 'InOutCubic')
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+if __name__ == '__main__':
+    pytest.main([__file__, '-v'])

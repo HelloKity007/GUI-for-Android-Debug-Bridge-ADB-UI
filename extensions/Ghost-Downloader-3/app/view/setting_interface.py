@@ -6,9 +6,9 @@ import sys
 from pathlib import Path
 from typing import Union
 
-from PyQt6.QtCore import Qt, QUrl, QResource
-from PyQt6.QtGui import QDesktopServices, QIcon
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, QUrl, QResource
+from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtWidgets import (
     QWidget,
     QFileDialog,
     QVBoxLayout,
@@ -266,12 +266,12 @@ class SpinBoxSettingCard(SettingCard):
 
         if configItem:
             _ = configItem.range
-            self.spinBox.setRange(int(_[0] * division), int(_[1] * division))
+            self.spinBox.setRange(_[0] * division, _[1] * division)
 
         self.hBoxLayout.addWidget(self.spinBox)
         self.hBoxLayout.addSpacing(24)
 
-        self.spinBox.setValue(int(self.configItem.value * division))
+        self.spinBox.setValue(self.configItem.value * division)
 
     def leaveEvent(self, event):
         if self.configItem:
@@ -387,7 +387,7 @@ class SettingInterface(ScrollArea):
         self.installFirefoxAddonsBtn.setText(self.tr("Firefox"))
         self.installFirefoxAddonsBtn.setUrl(FIREFOX_ADDONS_URL)
         self.installExtensionCard.hBoxLayout.insertWidget(
-            5, self.installFirefoxAddonsBtn, 0, Qt.AlignmentFlag.AlignRight
+            5, self.installFirefoxAddonsBtn, 0, Qt.AlignRight
         )
         self.installExtensionCard.hBoxLayout.insertSpacing(6, 16)
 
@@ -395,7 +395,7 @@ class SettingInterface(ScrollArea):
         self.installFirefoxAddonsBtn.setText(self.tr("Edge"))
         self.installFirefoxAddonsBtn.setUrl(EDGE_ADDONS_URL)
         self.installExtensionCard.hBoxLayout.insertWidget(
-            5, self.installFirefoxAddonsBtn, 0, Qt.AlignmentFlag.AlignRight
+            5, self.installFirefoxAddonsBtn, 0, Qt.AlignRight
         )
         self.installExtensionCard.hBoxLayout.insertSpacing(6, 16)
 
@@ -403,7 +403,7 @@ class SettingInterface(ScrollArea):
         self.installFirefoxAddonsBtn.setText(self.tr("Chrome"))
         self.installFirefoxAddonsBtn.setUrl(CHROME_ADDONS_URL)
         self.installExtensionCard.hBoxLayout.insertWidget(
-            5, self.installFirefoxAddonsBtn, 0, Qt.AlignmentFlag.AlignRight
+            5, self.installFirefoxAddonsBtn, 0, Qt.AlignRight
         )
         self.installExtensionCard.hBoxLayout.insertSpacing(6, 16)
 
@@ -699,7 +699,7 @@ class SettingInterface(ScrollArea):
                         Type=Application
                         Version={VERSION}
                         Name=Ghost Downloader 3
-                        Comment=A multi-threading downloader with QThread based on PyQt6
+                        Comment=A multi-threading downloader with QThread based on PySide6
                         Exec="{QApplication.applicationFilePath()}" --silence
                         StartupNotify=false
                         Terminal=false

@@ -1,0 +1,5 @@
+{
+    "server": "auto",
+    "output": ".",
+    "threads": 8
+}

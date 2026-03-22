@@ -27,14 +27,18 @@ logger.info(f"日志文件: {_log_file}")
 
 from datetime import datetime
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QComboBox, QTextEdit, QLineEdit, QFileDialog,
     QMessageBox, QInputDialog, QFrame, QScrollArea, QGroupBox, QSizePolicy,
     QDialog, QListWidget, QCheckBox, QRadioButton, QButtonGroup, QTabWidget
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, pyqtSlot, QTimer, QProcess, QFileSystemWatcher, QMetaObject, Q_ARG, QMimeData
-from PyQt6.QtGui import QFont, QColor, QPalette, QDrag, QShortcut, QKeySequence
+from PySide6.QtCore import Qt, QThread, Signal, Slot, QTimer, QProcess, QFileSystemWatcher, QMetaObject, Q_ARG, QMimeData
+from PySide6.QtGui import QFont, QColor, QPalette, QDrag, QShortcut, QKeySequence
+
+# PyQt6 兼容别名
+pyqtSignal = Signal
+pyqtSlot = Slot
 
 
 class SmoothScrollArea(QScrollArea):
@@ -672,7 +676,7 @@ class ADBGUI(QMainWindow):
         ref_layout.addLayout(search_layout)
         
         # Command reference text - Use QTextBrowser for HTML/Markdown rendering
-        from PyQt6.QtWidgets import QTextBrowser
+        from PySide6.QtWidgets import QTextBrowser
         self.ref_text = QTextBrowser()
         self.ref_text.setReadOnly(True)
         self.ref_text.setOpenExternalLinks(True)
@@ -2737,7 +2741,7 @@ class ADBGUI(QMainWindow):
                         return
             
             # 默认使用系统下载目录
-            from PyQt6.QtCore import QStandardPaths
+            from PySide6.QtCore import QStandardPaths
             default_download = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation)
             self.download_path_display.setText(default_download)
             self._download_folder = default_download
@@ -2754,7 +2758,7 @@ class ADBGUI(QMainWindow):
         
         # 如果没有设置或目录不存在，使用系统默认下载目录
         if not folder or not Path(folder).exists():
-            from PyQt6.QtCore import QStandardPaths
+            from PySide6.QtCore import QStandardPaths
             folder = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation)
         
         if folder and Path(folder).exists():
@@ -3004,7 +3008,7 @@ class ADBGUI(QMainWindow):
     
     def delete_download_tasks_and_files(self):
         """删除下载任务和文件"""
-        from PyQt6.QtWidgets import QMessageBox
+        from PySide6.QtWidgets import QMessageBox
         
         reply = QMessageBox.question(
             self,
@@ -5840,7 +5844,7 @@ class ADBGUI(QMainWindow):
         if not self.edit_mode:
             return
         
-        from PyQt6.QtWidgets import QMenu
+        from PySide6.QtWidgets import QMenu
         
         menu = QMenu(self)
         menu.setStyleSheet(f"""
@@ -6078,9 +6082,9 @@ class ADBGUI(QMainWindow):
     
     def show_opensource_components(self):
         """Show open source components dialog with Markdown rendering"""
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTextBrowser, QPushButton, QLabel
-        from PyQt6.QtGui import QFont
-        from PyQt6.QtCore import QFileSystemWatcher
+        from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTextBrowser, QPushButton, QLabel
+        from PySide6.QtGui import QFont
+        from PySide6.QtCore import QFileSystemWatcher
         
         # 组件清单文件路径
         components_file = os.path.join(self.project_dir, 'docs', 'OPENSOURCE_COMPONENTS.md')

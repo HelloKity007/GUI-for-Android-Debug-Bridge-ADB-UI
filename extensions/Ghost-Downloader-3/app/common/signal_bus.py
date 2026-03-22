@@ -1,12 +1,12 @@
 # coding: utf-8
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 
 class SignalBus(QObject):
-    """ pyqtSignal bus """
-    addTaskSignal = pyqtSignal(str, str, str, dict, str, int, bool, str)  # url, fileName, filePath, headers, status, preBlockNum, notCreateHistoryFile, fileSize
-    allTaskFinished = pyqtSignal()
-    appErrorSig = pyqtSignal(str)
-    showMainWindow = pyqtSignal()
+    """ Signal bus """
+    addTaskSignal = Signal(str, str, str, dict, str, int, bool, str)  # url, fileName, filePath, headers, status, preBlockNum, notCreateHistoryFile, fileSize
+    allTaskFinished = Signal()
+    appErrorSig = Signal(str)
+    showMainWindow = Signal()
 
 signalBus = SignalBus()

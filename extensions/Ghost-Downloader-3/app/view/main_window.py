@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 import darkdetect
-from PyQt6.QtCore import QSize, QThread, pyqtSignal, QTimer, QPropertyAnimation, QRect, QUrl, Qt
-from PyQt6.QtGui import QIcon, QDragEnterEvent, QDropEvent, QKeySequence, QDesktopServices, QColor
-from PyQt6.QtWidgets import QApplication, QGraphicsOpacityEffect
+from PySide6.QtCore import QSize, QThread, Signal, QTimer, QPropertyAnimation, QRect, QUrl
+from PySide6.QtGui import QIcon, QDragEnterEvent, QDropEvent, QKeySequence, QDesktopServices, QColor, Qt
+from PySide6.QtWidgets import QApplication, QGraphicsOpacityEffect
 from loguru import logger
 from qfluentwidgets import FluentIcon as FIF, setTheme, Theme, isDarkTheme
 from qfluentwidgets import NavigationItemPosition, MSFluentWindow, SplashScreen
@@ -52,7 +52,7 @@ class CustomSplashScreen(SplashScreen):
 
 
 class ThemeChangedListener(QThread):
-    themeChanged = pyqtSignal(str)
+    themeChanged = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)

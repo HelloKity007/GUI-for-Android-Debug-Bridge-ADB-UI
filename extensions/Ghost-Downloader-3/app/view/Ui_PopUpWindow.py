@@ -8,8 +8,8 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PyQt6.QtCore import (QCoreApplication, QRect, Qt)
-from PyQt6.QtWidgets import (QLabel, QToolButton)
+from PySide6.QtCore import (QCoreApplication, QRect, Qt)
+from PySide6.QtWidgets import (QLabel, QToolButton)
 
 from qfluentwidgets import PixmapLabel
 
@@ -33,7 +33,7 @@ class Ui_PopUpWindow(object):
         self.contentLabel = QLabel(PopUpWindow)
         self.contentLabel.setObjectName(u"contentLabel")
         self.contentLabel.setGeometry(QRect(90, 60, 261, 50))
-        self.contentLabel.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.contentLabel.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.contentLabel.setWordWrap(True)
         self.closeBtn = QToolButton(PopUpWindow)
         self.closeBtn.setObjectName(u"closeBtn")

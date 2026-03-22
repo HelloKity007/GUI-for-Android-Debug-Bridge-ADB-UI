@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QSystemTrayIcon, QApplication
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QSystemTrayIcon, QApplication
 from qfluentwidgets import Action
 from qfluentwidgets import FluentIcon as FIF
 

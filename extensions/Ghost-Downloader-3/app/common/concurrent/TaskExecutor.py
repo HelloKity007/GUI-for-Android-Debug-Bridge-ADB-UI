@@ -3,7 +3,7 @@ import os
 import warnings
 from typing import Dict, List, Callable, Iterable
 
-from PyQt6.QtCore import QThreadPool, QObject
+from PySide6.QtCore import QThreadPool, QObject
 
 from .Future import QFuture, FutureCancelled, State
 from .Task import QBaseTask, QTask
