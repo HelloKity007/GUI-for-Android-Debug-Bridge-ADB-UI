@@ -217,18 +217,100 @@ class DraggableGroupBox(QGroupBox):
         event.ignore()
 
 
+class DeviceInfoWorker(QThread):
+    """后台线程：获取设备详细信息（避免卡主界面）"""
+    info_ready = Signal(str, dict)  # device_id, info_dict
+
+    def __init__(self, adb_manager, device_id):
+        super().__init__()
+        self.adb = adb_manager
+        self.device_id = device_id
+
+    def run(self):
+        """后台获取设备信息"""
+        import re
+        info = {}
+        try:
+            # Serial
+            result = subprocess.run(
+                [self.adb.adb_path, '-s', self.device_id, 'shell', 'getprop', 'ro.serialno'],
+                capture_output=True, text=True, timeout=3, creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            )
+            info['serial'] = result.stdout.strip() if result.returncode == 0 else ''
+
+            # Board type
+            result = subprocess.run(
+                [self.adb.adb_path, '-s', self.device_id, 'shell', 'getprop', 'ro.product.xbh.board.type'],
+                capture_output=True, text=True, timeout=3, creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            )
+            info['board'] = result.stdout.strip() if result.returncode == 0 else ''
+
+            # Date.Ver
+            result = subprocess.run(
+                [self.adb.adb_path, '-s', self.device_id, 'shell', 'getprop', 'ro.build.xbh.date.ver'],
+                capture_output=True, text=True, timeout=3, creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            )
+            info['date_ver'] = result.stdout.strip() if result.returncode == 0 else ''
+
+            # XbhModel
+            result = subprocess.run(
+                [self.adb.adb_path, '-s', self.device_id, 'shell', 'getprop', 'ro.product.xbh.customer.model'],
+                capture_output=True, text=True, timeout=3, creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            )
+            info['xbh_model'] = result.stdout.strip() if result.returncode == 0 else ''
+
+            # 使用 dumpsys connectivity 获取网络信息（更可靠）
+            result = subprocess.run(
+                [self.adb.adb_path, '-s', self.device_id, 'shell', 'dumpsys', 'connectivity'],
+                capture_output=True, text=True, timeout=5, creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            )
+            connectivity_output = result.stdout if result.returncode == 0 else ''
+
+            # 解析 WiFi 信息: ni{WIFI CONNECTED extra: xx:xx:xx:xx:xx:xx}
+            wifi_match = re.search(r'ni\{WIFI\s+CONNECTED\s+extra:\s*([0-9a-fA-F:]+)\}', connectivity_output)
+            info['wifi_mac'] = wifi_match.group(1) if wifi_match else ''
+
+            # 解析 WiFi IP: InterfaceName: wlan0 LinkAddresses: [ ...,192.168.x.x/24 ]
+            wifi_ip_match = re.search(r'InterfaceName:\s*wlan0.*?(\d+\.\d+\.\d+\.\d+)/\d+', connectivity_output)
+            info['wifi_ip'] = wifi_ip_match.group(1) if wifi_ip_match else ''
+
+            # 解析 Ethernet 信息: ni{Ethernet CONNECTED extra: xx:xx:xx:xx:xx:xx}
+            eth_match = re.search(r'ni\{Ethernet\s+CONNECTED\s+extra:\s*([0-9a-fA-F:]+)\}', connectivity_output)
+            info['eth_mac'] = eth_match.group(1) if eth_match else ''
+
+            # 解析 Ethernet IP: InterfaceName: eth0 LinkAddresses: [ ...,192.168.x.x/24 ]
+            eth_ip_match = re.search(r'InterfaceName:\s*eth0.*?(\d+\.\d+\.\d+\.\d+)/\d+', connectivity_output)
+            info['eth_ip'] = eth_ip_match.group(1) if eth_ip_match else ''
+
+        except Exception as e:
+            pass
+
+        self.info_ready.emit(self.device_id, info)
+
+
 class ADBGUI(QMainWindow):
     """Main GUI Application"""
-    
+
     # Signal for showing custom dialog (must be defined at class level)
     custom_dialog_ready = pyqtSignal(dict)
     app_list_ready = pyqtSignal(list)
-    
+    device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
+
+    # 版本号
+    APP_VERSION = "2.003.004"
+
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("ADB Tool for Windows")
+        self.setWindowTitle(f"ADB Tool v{self.APP_VERSION}")
         self.setGeometry(100, 100, 1200, 800)
         self.setMinimumSize(1000, 700)
+
+        # 设备信息缓存 {device_id: {serial, board, wifi_mac, wifi_ip, eth_mac, eth_ip}}
+        self.device_info_cache = {}
+        self.info_worker = None  # 后台获取信息的线程
+
+        # 连接设备信息更新信号
+        self.device_info_updated.connect(self._on_device_info_updated)
         
         # Color schemes
         self.light_colors = {
@@ -466,19 +548,36 @@ class ADBGUI(QMainWindow):
         status_row.addStretch()
         device_layout.addLayout(status_row)
         
-        # Device info display row (showing detailed info below status)
-        info_row = QHBoxLayout()
-        self.device_detail_label = QLabel("")
-        self.device_detail_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
-        info_row.addWidget(self.device_detail_label)
+        # Device info display row 1 (Serial, XbhModel, Android, Date.Ver)
+        info_row1 = QHBoxLayout()
         self.device_serial_label = QLabel("")
         self.device_serial_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
-        info_row.addWidget(self.device_serial_label)
+        info_row1.addWidget(self.device_serial_label)
+        self.device_detail_label = QLabel("")
+        self.device_detail_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
+        info_row1.addWidget(self.device_detail_label)
         self.device_android_label = QLabel("")
         self.device_android_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
-        info_row.addWidget(self.device_android_label)
-        info_row.addStretch()
-        device_layout.addLayout(info_row)
+        info_row1.addWidget(self.device_android_label)
+        self.device_datever_label = QLabel("")
+        self.device_datever_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
+        info_row1.addWidget(self.device_datever_label)
+        info_row1.addStretch()
+        device_layout.addLayout(info_row1)
+
+        # Device info display row 2 (WiFi, Ethernet, Board)
+        info_row2 = QHBoxLayout()
+        self.device_wifi_label = QLabel("")
+        self.device_wifi_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
+        info_row2.addWidget(self.device_wifi_label)
+        self.device_eth_label = QLabel("")
+        self.device_eth_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
+        info_row2.addWidget(self.device_eth_label)
+        self.device_board_label = QLabel("")
+        self.device_board_label.setStyleSheet(f"color: {self.colors['text_secondary']}; font-size: 9pt;")
+        info_row2.addWidget(self.device_board_label)
+        info_row2.addStretch()
+        device_layout.addLayout(info_row2)
         
         adb_layout.addWidget(device_group)
         
@@ -1754,6 +1853,10 @@ class ADBGUI(QMainWindow):
             self.current_device = None
             self.device_info_label.setText("No devices connected - Check USB connection and USB debugging")
             self.device_info_label.setStyleSheet(f"color: {self.colors['warning']};")
+            # 清空所有设备信息标签
+            self.device_detail_label.setText("")
+            self.device_android_label.setText("")
+            self._clear_device_extended_info()
             if not silent or had_devices:
                 self.update_status("No devices found")
                 if had_devices:
@@ -1780,54 +1883,132 @@ class ADBGUI(QMainWindow):
                 else:
                     self.current_device = selection.split()[0]
             
-            # Get device info for display
-            # In silent mode, skip get_devices call to avoid redundant logging
-            if silent:
-                # In silent mode, just use the device ID we already have
-                # Don't call get_devices to avoid logging
-                device_info = None
-                # Set a simple display text without calling get_devices
-                display_text = f"Selected: {self.current_device}"
-            else:
-                # Not in silent mode, get full device info
-                devices = self.adb.get_devices(silent=silent)
-                device_info = next((d for d in devices if d['id'] == self.current_device), None)
-            
-            if device_info:
-                model = device_info.get('model', 'Unknown')
-                manufacturer = device_info.get('manufacturer', '')
-                if manufacturer:
-                    display_text = f"Selected: {manufacturer} {model} ({self.current_device})"
-                else:
-                    display_text = f"Selected: {model} ({self.current_device})"
-            else:
-                display_text = f"Selected: {self.current_device}"
-            
+            # 从选择的显示字符串中提取设备名称（不调用 get_devices 避免卡顿）
+            # 格式: "Device Name (device_id)" 或 "Device Name (device_id, Android X)"
+            device_name = selection.split('(')[0].strip() if '(' in selection else selection
+            display_text = f"Selected: {device_name} ({self.current_device})"
+
+            # 从显示字符串中提取 Android 版本
+            android_ver = ''
+            if 'Android' in selection:
+                import re
+                match = re.search(r'Android\s+([\d.]+)', selection)
+                if match:
+                    android_ver = match.group(1)
+
             # Only update UI and log if not in silent mode (for auto-refresh)
             if not silent:
                 self.device_info_label.setText(display_text)
                 self.device_info_label.setStyleSheet(f"color: {self.colors['success']};")
                 self.log(f"Selected device: {display_text}")
-                
-                # Update detailed info display
-                if device_info:
-                    xbh_model = device_info.get('xbh_model', '')
-                    detail_text = f"XbhModel: {xbh_model}" if xbh_model else ""
-                    self.device_detail_label.setText(detail_text)
-                    serial = device_info.get('serial', '')
-                    self.device_serial_label.setText(f"Serial: {serial}" if serial else "")
-                    android_ver = device_info.get('android_version', '')
-                    self.device_android_label.setText(f"Android: {android_ver}" if android_ver else "")
-                else:
-                    self.device_detail_label.setText("")
-                    self.device_serial_label.setText("")
-                    self.device_android_label.setText("")
+
+                # Update detailed info display (row 1) - Android 版本
+                self.device_android_label.setText(f"Android: {android_ver}" if android_ver else "")
+                # XbhModel 和 Serial 等通过后台获取
+                self.device_detail_label.setText("")
+
+                # 检查缓存，如果有则立即显示，否则后台获取
+                self._update_device_extended_info(self.current_device)
             # In silent mode, only update the label if it's not already set correctly
             elif not hasattr(self, 'device_info_label') or self.device_info_label.text() != display_text:
                 self.device_info_label.setText(display_text)
                 self.device_info_label.setStyleSheet(f"color: {self.colors['success']};")
         else:
             self.current_device = None
+            # 清空扩展信息
+            self._clear_device_extended_info()
+
+    def _update_device_extended_info(self, device_id):
+        """更新设备扩展信息（Serial, WiFi, Ethernet, Board）"""
+        if not device_id:
+            self._clear_device_extended_info()
+            return
+
+        # 检查缓存
+        if device_id in self.device_info_cache:
+            cached = self.device_info_cache[device_id]
+            self._display_device_extended_info(cached)
+        else:
+            # 显示加载中
+            self.device_serial_label.setText("Serial: 加载中...")
+            self.device_wifi_label.setText("")
+            self.device_eth_label.setText("")
+            self.device_board_label.setText("")
+
+        # 后台获取最新信息（无论是否有缓存都刷新）
+        self._fetch_device_info_async(device_id)
+
+    def _fetch_device_info_async(self, device_id):
+        """后台异步获取设备信息"""
+        # 如果有正在运行的 worker，先停止
+        if self.info_worker and self.info_worker.isRunning():
+            self.info_worker.quit()
+            self.info_worker.wait(500)
+
+        self.info_worker = DeviceInfoWorker(self.adb, device_id)
+        self.info_worker.info_ready.connect(self._on_device_info_fetched)
+        self.info_worker.start()
+
+    def _on_device_info_fetched(self, device_id, info):
+        """后台获取设备信息完成回调"""
+        # 更新缓存
+        self.device_info_cache[device_id] = info
+
+        # 只有当前选中的设备才更新 UI
+        if self.current_device == device_id:
+            self._display_device_extended_info(info)
+
+    def _display_device_extended_info(self, info):
+        """显示设备扩展信息"""
+        # Serial
+        serial = info.get('serial', '')
+        self.device_serial_label.setText(f"Serial: {serial}" if serial else "")
+
+        # XbhModel
+        xbh_model = info.get('xbh_model', '')
+        self.device_detail_label.setText(f"XbhModel: {xbh_model}" if xbh_model else "")
+
+        # Date.Ver
+        date_ver = info.get('date_ver', '')
+        self.device_datever_label.setText(f"Date.Ver: {date_ver}" if date_ver else "")
+
+        # WiFi
+        wifi_mac = info.get('wifi_mac', '')
+        wifi_ip = info.get('wifi_ip', '')
+        if wifi_mac or wifi_ip:
+            wifi_text = f"WiFi: {wifi_ip}" if wifi_ip else "WiFi:"
+            if wifi_mac:
+                wifi_text += f" ({wifi_mac})"
+            self.device_wifi_label.setText(wifi_text)
+        else:
+            self.device_wifi_label.setText("")
+
+        # Ethernet
+        eth_mac = info.get('eth_mac', '')
+        eth_ip = info.get('eth_ip', '')
+        if eth_mac or eth_ip:
+            eth_text = f"Eth: {eth_ip}" if eth_ip else "Eth:"
+            if eth_mac:
+                eth_text += f" ({eth_mac})"
+            self.device_eth_label.setText(eth_text)
+        else:
+            self.device_eth_label.setText("")
+
+        # Board
+        board = info.get('board', '')
+        self.device_board_label.setText(f"Board: {board}" if board else "")
+
+    def _clear_device_extended_info(self):
+        """清空设备扩展信息"""
+        self.device_serial_label.setText("")
+        self.device_datever_label.setText("")
+        self.device_wifi_label.setText("")
+        self.device_eth_label.setText("")
+        self.device_board_label.setText("")
+
+    def _on_device_info_updated(self, device_id, info):
+        """设备信息更新信号处理"""
+        self._on_device_info_fetched(device_id, info)
     
     def show_device_info(self):
         """Show detailed device information"""
