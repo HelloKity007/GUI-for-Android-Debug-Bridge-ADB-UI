@@ -164,6 +164,12 @@
           "accent": false
         },
         {
+          "id": "reboot_update",
+          "label": "🔄 Reboot to Update",
+          "action": "reboot_update",
+          "accent": false
+        },
+        {
           "id": "adb_root_remount_copy_40",
           "label": "🔐 ADB Root & Remount",
           "action": "adb_root_remount",

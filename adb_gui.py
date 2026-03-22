@@ -297,7 +297,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.003.004"
+    APP_VERSION = "2.003.005"
 
     def __init__(self):
         super().__init__()
@@ -2260,6 +2260,7 @@ class ADBGUI(QMainWindow):
             'fastboot_oem_unlock': self.fastboot_oem_unlock,
             'fastboot_reboot': self.fastboot_reboot,
             'reboot_loader': self.reboot_loader,
+            'reboot_update': self.reboot_update,
             'adb_root_remount': self.adb_root_remount,
             'show_test_scripts': self.show_test_scripts,
             'show_jadx_decompiler': self.show_jadx_decompiler,
@@ -5347,7 +5348,30 @@ class ADBGUI(QMainWindow):
                 self.update_status("Failed to reboot")
         
         threading.Thread(target=do_reboot, daemon=True).start()
-    
+
+    def reboot_update(self):
+        """Reboot to update mode"""
+        if not self.current_device:
+            QMessageBox.warning(self, "No Device", "Please select a device first")
+            return
+
+        self.log("Rebooting to update...")
+        self.update_status("Rebooting to update...")
+
+        def do_reboot():
+            cmd = f"{self.get_device_flag()} reboot update"
+            result = self.adb.run_command(cmd)
+            self.log_command(cmd, result, "Reboot to Update")
+            if result.get('success'):
+                self.log("Device rebooting to update...", "INFO")
+                self.update_status("Device rebooting to update...")
+            else:
+                error_msg = result.get('stderr') or result.get('stdout') or 'Unknown error'
+                self.log(f"Error: {error_msg}", "ERROR")
+                self.update_status("Failed to reboot")
+
+        threading.Thread(target=do_reboot, daemon=True).start()
+
     def adb_root_remount(self):
         """Execute adb root and adb remount"""
         if not self.current_device:
