@@ -65,6 +65,7 @@ from dialogs import (
 from framework.plugin.plugin_manager import PluginManager
 from framework.event.event_bus import EventBus
 from utils.config_manager import ConfigManager
+from utils.logcat_manager import LogcatManager
 
 
 class DraggableButton(QPushButton):
@@ -297,7 +298,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.003.005"
+    APP_VERSION = "2.003.013"
 
     def __init__(self):
         super().__init__()
@@ -417,6 +418,17 @@ class ADBGUI(QMainWindow):
         self.log_thread = None
         self.log_running = False
         self.log_file = None  # Log file handle for auto-save
+
+        # 初始化 LogcatManager v2（使用 QTimer 轮询队列，避免 QThread 信号问题）
+        self.logcat_manager = LogcatManager()
+        self.logcat_manager.set_callbacks(
+            on_logs=self._on_logcat_logs,
+            on_error=self._on_logcat_error,
+            on_status=self._on_logcat_status
+        )
+        # 创建 logcat 轮询定时器
+        self.logcat_poll_timer = QTimer()
+        self.logcat_manager.set_timer(self.logcat_poll_timer)
         
         # Initialize log storage for filtering
         self.all_logs = []
@@ -1736,8 +1748,18 @@ class ADBGUI(QMainWindow):
         # Also check scrcpy availability
         self.check_scrcpy_availability()
     
+    #$XBH_AI_PATCH_START
+    # 原始代码：
+    # def refresh_devices(self, silent=False):
+    #     """Refresh list of connected devices..."""
+    #     if not silent:
+    #         self.update_status("Refreshing devices...")
+    #     test_result = self.adb.run_command('version')  # 阻塞！
+    #     ...
+    #     devices = self.adb.get_devices(...)  # 阻塞！
+    #$XBH_AI_PATCH_MODIFY
     def refresh_devices(self, silent=False):
-        """Refresh list of connected devices.
+        """Refresh list of connected devices（异步，不阻塞 UI）
 
         Args:
             silent: If True, skip extra getprop calls and log spam (for auto-refresh)
@@ -1745,19 +1767,51 @@ class ADBGUI(QMainWindow):
         if not silent:
             self.update_status("Refreshing devices...")
 
-        # Test ADB connection first
-        test_result = self.adb.run_command('version')
-        if not test_result['success']:
-            error_msg = test_result['stderr'] if test_result['stderr'] else "Unknown error"
-            self.log(f"ADB test failed: {error_msg}", "ERROR")
-            self.log(f"ADB path: {self.adb.adb_path}", "ERROR")
-            self.update_status(f"ADB error: {error_msg[:50]}")
-            self.device_info_label.setText(f"ADB Error: {error_msg[:100]}")
-            self.device_info_label.setStyleSheet(f"color: {self.colors['error']};")
-            return
+        def do_refresh():
+            """在工作线程中执行 ADB 调用"""
+            try:
+                # Test ADB connection first
+                test_result = self.adb.run_command('version')
+                if not test_result['success']:
+                    error_msg = test_result['stderr'] if test_result['stderr'] else "Unknown error"
+                    # 使用 QMetaObject.invokeMethod 确保在主线程执行
+                    QMetaObject.invokeMethod(self, "_on_refresh_error",
+                                             Qt.ConnectionType.QueuedConnection,
+                                             Q_ARG(str, error_msg))
+                    return
 
-        # silent 自动刷新只取设备列表（1条命令），手动刷新才取完整 xbh/serial/android 信息
-        devices = self.adb.get_devices(silent=silent, full_info=not silent)
+                # silent 自动刷新只取设备列表（1条命令），手动刷新才取完整信息
+                devices = self.adb.get_devices(silent=silent, full_info=not silent)
+                # 存储结果并触发主线程回调
+                self._pending_devices = devices
+                self._pending_silent = silent
+                QMetaObject.invokeMethod(self, "_invoke_refresh_complete",
+                                         Qt.ConnectionType.QueuedConnection)
+            except Exception as e:
+                import traceback
+                print(f"[ERROR] do_refresh exception: {e}\n{traceback.format_exc()}")
+
+        threading.Thread(target=do_refresh, daemon=True).start()
+
+    @Slot()
+    def _invoke_refresh_complete(self):
+        """中转槽函数 - 从 QMetaObject.invokeMethod 调用"""
+        devices = getattr(self, '_pending_devices', None)
+        silent = getattr(self, '_pending_silent', False)
+        self._on_refresh_complete(devices, silent)
+
+    def _on_refresh_error(self, error_msg: str):
+        """刷新失败回调 - 主线程"""
+        self.log(f"ADB test failed: {error_msg}", "ERROR")
+        self.log(f"ADB path: {self.adb.adb_path}", "ERROR")
+        self.update_status(f"ADB error: {error_msg[:50]}")
+        self.device_info_label.setText(f"ADB Error: {error_msg[:100]}")
+        self.device_info_label.setStyleSheet(f"color: {self.colors['error']};")
+
+    def _on_refresh_complete(self, devices, silent: bool):
+        """刷新完成回调 - 主线程，更新设备列表 UI"""
+        # 调试日志
+        self.log(f"[DEBUG] _on_refresh_complete called, devices={devices}, silent={silent}", "DEBUG")
 
         # Get current device list for comparison
         current_device_ids = set()
@@ -1811,7 +1865,10 @@ class ADBGUI(QMainWindow):
             devices_changed = current_device_ids != new_device_ids
 
             # Disconnect signal before modifying combo box to prevent unwanted triggers
-            self.device_combo.currentTextChanged.disconnect()
+            try:
+                self.device_combo.currentTextChanged.disconnect()
+            except RuntimeError:
+                pass  # 信号未连接时忽略
 
             self.device_combo.clear()
             self.device_combo.addItems(device_list)
@@ -1822,10 +1879,9 @@ class ADBGUI(QMainWindow):
             if was_no_device and device_list:
                 self.device_combo.setCurrentIndex(0)
                 # Call on_device_selected directly with silent parameter (signal is disconnected so won't trigger)
-                self.on_device_selected(silent=silent)  # Use silent parameter from refresh_devices
+                self.on_device_selected(silent=silent)
             elif self.current_device and device_list:
                 # Device is already selected - just update the combo box index if needed
-                # Find the current device in the new list
                 current_display = None
                 for display_str, device_id in device_display_map.items():
                     if device_id == self.current_device:
@@ -1836,7 +1892,6 @@ class ADBGUI(QMainWindow):
                     index = self.device_combo.findText(current_display)
                     if index >= 0:
                         self.device_combo.setCurrentIndex(index)
-                # Don't call on_device_selected when device is already selected (avoids redundant get_devices call)
 
             # Reconnect signal after all combo box operations are complete
             self.device_combo.currentTextChanged.connect(self.on_device_selected)
@@ -1844,7 +1899,6 @@ class ADBGUI(QMainWindow):
             if not silent or devices_changed:
                 self.update_status(f"Found {len(devices)} device(s)")
                 if devices_changed:
-                    # Log with device names only when list changes
                     device_names = [f"{d.get('model', d.get('product', 'Unknown'))} ({d['id']})" for d in devices]
                     self.log(f"Found {len(devices)} device(s): {', '.join(device_names)}")
         else:
@@ -1861,6 +1915,7 @@ class ADBGUI(QMainWindow):
                 self.update_status("No devices found")
                 if had_devices:
                     self.log("No devices found. Make sure USB debugging is enabled and device is connected.", "WARNING")
+    #$XBH_AI_PATCH_END
     
     def on_device_selected(self, selection=None, silent=False):
         """Handle device selection
@@ -5487,30 +5542,49 @@ class ADBGUI(QMainWindow):
         
         threading.Thread(target=do_command, daemon=True).start()
     
+    #$XBH_AI_PATCH_START
+    # 原始代码（共约140行）：
+    # def toggle_logcat(self):
+    #     """Start/stop logcat"""
+    #     if not self.current_device: ...
+    #     if self.log_running: ...
+    #     else: ...
+    #         def run_logcat(): ...
+    #         threading.Thread(target=run_logcat, daemon=True).start()
+    #
+    # def poll_logcat(self):
+    #     """Poll logcat in a separate thread"""
+    #     while self.log_running: ...
+    #$XBH_AI_PATCH_MODIFY
     def toggle_logcat(self):
-        """Start/stop logcat"""
+        """Start/stop logcat - 使用 LogcatManager 实现异步批量处理"""
         if not self.current_device:
             QMessageBox.warning(self, "No Device", "Please select a device first")
             return
-        
-        if self.log_running:
+
+        if self.logcat_manager.is_running():
+            # 停止 logcat（非阻塞）
+            self.logcat_manager.stop()
+            # 停止轮询定时器
+            self.logcat_poll_timer.stop()
             self.log_running = False
-            self.log_button.setText("▶️ Start Logcat")
+            self.log_button.setText("Start Logcat")
             self.log("Logcat stopped")
             self.update_status("Logcat stopped")
-            # Close log file
+            # 关闭日志文件
             if self.log_file:
                 try:
                     self.log_file.close()
-                except:
+                except Exception:
                     pass
                 self.log_file = None
                 self.log_file_label.setText("")
         else:
+            # 启动 logcat
             self.log_running = True
-            self.log_button.setText("⏹️ Stop Logcat")
-            
-            # Create log file if auto-save is enabled
+            self.log_button.setText("Stop Logcat")
+
+            # 创建日志文件（如果启用自动保存）
             if self.auto_save_cb.isChecked():
                 prefix = self.log_file_prefix.text() or "adb_logcat"
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -5521,141 +5595,78 @@ class ADBGUI(QMainWindow):
                 try:
                     self.log_file = open(log_path, 'w', encoding='utf-8')
                     self.log_file_label.setText(filename)
-                except Exception as e:
+                except Exception:
                     self.log_file = None
                     self.log_file_label.setText("文件创建失败")
-            
+
+            # 获取 ADB 路径
+            adb_path = self.adb.adb_path
+            if adb_path and not os.path.isabs(adb_path):
+                adb_path = os.path.join(self.project_dir, adb_path)
+
             self.log("Starting logcat...")
             self.update_status("Logcat running...")
-            
-            def run_logcat():
-                try:
-                    # Store device ID and ADB path for thread safety
-                    device_id = self.current_device
-                    adb_path = self.adb.adb_path
-                    
-                    # Debug: log the values
-                    QTimer.singleShot(0, lambda: self.log(f"[DEBUG] device_id={device_id}, adb_path={adb_path}", "DEBUG"))
-                    
-                    # Convert to absolute path if needed
-                    if adb_path and not os.path.isabs(adb_path):
-                        adb_path = os.path.join(self.project_dir, adb_path)
-                        QTimer.singleShot(0, lambda: self.log(f"[DEBUG] converted adb_path={adb_path}", "DEBUG"))
-                    
-                    # Check if adb_path exists
-                    if not os.path.exists(adb_path):
-                        QTimer.singleShot(0, lambda: self.log(f"[ERROR] ADB not found: {adb_path}", "ERROR"))
-                        self.log_running = False
-                        QTimer.singleShot(0, lambda: self.log_button.setText("▶️ Start Logcat"))
-                        return
-                    
-                    process = subprocess.Popen(
-                        [adb_path, '-s', device_id, 'logcat', '-v', 'threadtime'],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding='utf-8',
-                        errors='replace',
-                        bufsize=1,
-                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-                    )
-                    
-                    # Check if process started successfully
-                    if process.poll() is not None:
-                        # Process already terminated
-                        stderr_output = process.stderr.read()
-                        error_msg = f"Logcat process failed to start: {stderr_output}"
-                        QTimer.singleShot(0, lambda: self.log(error_msg, "ERROR"))
-                        self.log_running = False
-                        QTimer.singleShot(0, lambda: self.log_button.setText("▶️ Start Logcat"))
-                        return
-                    
-                    # Log that logcat started successfully
-                    QTimer.singleShot(0, lambda: self.log(f"Logcat started with PID: {process.pid}", "INFO"))
-                    
-                    import time
-                    read_count = 0
-                    # Read output line by line
-                    while self.log_running:
-                        line = process.stdout.readline()
-                        if line:
-                            read_count += 1
-                            # Use a closure to capture the line value properly
-                            line_text = line.strip()
-                            if line_text:  # Only log non-empty lines
-                                QTimer.singleShot(0, lambda l=line_text: self.log(l, "LOGCAT"))
-                        elif process.poll() is not None:
-                            # Process ended - read any remaining stderr
-                            stderr_output = process.stderr.read()
-                            QTimer.singleShot(0, lambda: self.log(f"Logcat ended. Read {read_count} lines. stderr: {stderr_output}", "DEBUG"))
-                            break
-                        else:
-                            time.sleep(0.1)  # Small delay to prevent CPU spin
-                    
-                    # Clean up
-                    if process.poll() is None:
-                        process.terminate()
-                        try:
-                            process.wait(timeout=2)
-                        except subprocess.TimeoutExpired:
-                            process.kill()
-                    
-                    if self.log_running:
-                        # Process ended unexpectedly
-                        stderr_output = process.stderr.read()
-                        if stderr_output:
-                            QTimer.singleShot(0, lambda: self.log(f"Logcat process ended: {stderr_output}", "ERROR"))
-                        else:
-                            QTimer.singleShot(0, lambda: self.log("Logcat process ended unexpectedly", "WARNING"))
-                        self.log_running = False
-                        QTimer.singleShot(0, lambda: self.log_button.setText("▶️ Start Logcat"))
-                        
-                except Exception as e:
-                    error_msg = f"Logcat error: {str(e)}"
-                    QTimer.singleShot(0, lambda: self.log(error_msg, "ERROR"))
-                    QTimer.singleShot(0, lambda: QMessageBox.critical(self, "Logcat Error", error_msg))
-                    self.log_running = False
-                    QTimer.singleShot(0, lambda: self.log_button.setText("▶️ Start Logcat"))
-                    import traceback
-                    QTimer.singleShot(0, lambda: self.log(f"Traceback: {traceback.format_exc()}", "ERROR"))
-            
-            self.current_device = self.current_device  # Store for logcat thread
-            threading.Thread(target=self.poll_logcat, daemon=True).start()
-    
-    def poll_logcat(self):
-        """Poll logcat in a separate thread"""
-        import time
-        device_id = self.current_device
-        adb_path = self.adb.adb_path
-        
-        # Convert to absolute path if needed
-        if adb_path and not os.path.isabs(adb_path):
-            adb_path = os.path.join(self.project_dir, adb_path)
-        
-        last_size = 0
-        
-        while self.log_running:
+
+            # 使用 LogcatManager 启动
+            self.logcat_manager.start(adb_path, self.current_device)
+
+    def _on_logcat_logs(self, logs: list):
+        """处理批量日志 - 由 LogcatManager 信号调用（主线程）"""
+        if not logs:
+            return
+
+        # 批量追加到 UI，减少重绘次数
+        self.output_text.setUpdatesEnabled(False)
+        try:
+            timestamp = datetime.now().strftime("%y%m%d %H:%M:%S")
+            for line in logs:
+                log_entry = f"[{timestamp}] [LOGCAT] {line}"
+                self.all_logs.append(log_entry)
+                self.output_text.append(log_entry)
+
+                # 写入文件
+                if self.log_file:
+                    try:
+                        self.log_file.write(log_entry + '\n')
+                    except Exception:
+                        pass
+        finally:
+            self.output_text.setUpdatesEnabled(True)
+
+        # 刷新文件
+        if self.log_file:
             try:
-                result = subprocess.run(
-                    [adb_path, '-s', device_id, 'logcat', '-d', '-v', 'threadtime'],
-                    capture_output=True, text=True, timeout=10,
-                    encoding='utf-8', errors='replace',
-                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-                )
-                
-                if result.returncode == 0 and result.stdout:
-                    lines = result.stdout.split('\n')
-                    if last_size < len(lines):
-                        new_lines = lines[last_size:]
-                        last_size = len(lines)
-                        for line in new_lines:
-                            line = line.strip()
-                            if line:
-                                QTimer.singleShot(0, lambda l=line: self.log(l, "LOGCAT"))
-            except:
+                self.log_file.flush()
+            except Exception:
                 pass
-            
-            time.sleep(0.5)
+
+        # 自动滚动
+        if self.auto_scroll_cb.isChecked():
+            scrollbar = self.output_text.verticalScrollBar()
+            scrollbar.setValue(scrollbar.maximum())
+
+    def _on_logcat_error(self, error_msg: str):
+        """处理 logcat 错误 - 由 LogcatManager 信号调用（主线程）"""
+        self.log(f"Logcat 错误: {error_msg}", "ERROR")
+
+    def _on_logcat_status(self, running: bool, message: str):
+        """处理 logcat 状态变化 - 由 LogcatManager 信号调用（主线程）"""
+        self.log(message, "INFO")
+        self.update_status(message)
+
+        if not running:
+            # logcat 已停止
+            self.log_running = False
+            self.log_button.setText("Start Logcat")
+            # 关闭日志文件
+            if self.log_file:
+                try:
+                    self.log_file.close()
+                except Exception:
+                    pass
+                self.log_file = None
+                self.log_file_label.setText("")
+    #$XBH_AI_PATCH_END
     
     def get_absolute_path(self, relative_path):
         """Convert relative path to absolute path"""
