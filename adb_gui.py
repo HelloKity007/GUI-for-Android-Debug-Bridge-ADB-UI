@@ -298,7 +298,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.003.014"
+    APP_VERSION = "2.003.015"
 
     def __init__(self):
         super().__init__()
@@ -737,9 +737,11 @@ class ADBGUI(QMainWindow):
         export_btn.clicked.connect(self.export_logs)
         log_controls.addWidget(export_btn)
         
-        # Auto-scroll checkbox
+        # Auto-scroll checkbox (从配置读取，默认关闭)
         self.auto_scroll_cb = QCheckBox("Auto-scroll")
-        self.auto_scroll_cb.setChecked(True)
+        auto_scroll_default = self.config.get('logcat.auto_scroll', False)
+        self.auto_scroll_cb.setChecked(auto_scroll_default)
+        self.auto_scroll_cb.stateChanged.connect(self._on_auto_scroll_changed)
         log_controls.addWidget(self.auto_scroll_cb)
         
         # Auto-save to file checkbox
@@ -1743,7 +1745,12 @@ class ADBGUI(QMainWindow):
         if self.auto_scroll_cb.isChecked():
             scrollbar = self.output_text.verticalScrollBar()
             scrollbar.setValue(scrollbar.maximum())
-    
+
+    def _on_auto_scroll_changed(self, state):
+        """Auto-scroll 状态变化时保存到配置"""
+        enabled = state == Qt.CheckState.Checked.value
+        self.config.set('logcat.auto_scroll', enabled)
+
     def update_status(self, message):
         """Update status bar - thread safe"""
         QMetaObject.invokeMethod(self, "_update_status_qt",
