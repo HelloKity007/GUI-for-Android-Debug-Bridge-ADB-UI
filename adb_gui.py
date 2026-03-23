@@ -298,7 +298,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.003.013"
+    APP_VERSION = "2.003.014"
 
     def __init__(self):
         super().__init__()
@@ -719,12 +719,15 @@ class ADBGUI(QMainWindow):
         log_controls.addWidget(QLabel("Level:"))
         log_controls.addWidget(self.log_level_combo)
         
-        # Log search filter
+        # Log search filter (支持正则表达式)
         self.log_filter_edit = QLineEdit()
-        self.log_filter_edit.setPlaceholderText("Filter logs...")
+        self.log_filter_edit.setPlaceholderText("Filter (支持正则)...")
         self.log_filter_edit.setMaximumWidth(200)
         self.log_filter_edit.textChanged.connect(self.filter_logs)
         log_controls.addWidget(self.log_filter_edit)
+
+        # 缓存编译后的正则表达式
+        self._log_filter_regex = None
         
         clear_btn = QPushButton("🗑️ Clear")
         clear_btn.clicked.connect(self.clear_output)
@@ -1686,40 +1689,56 @@ class ADBGUI(QMainWindow):
     
     def filter_log_level(self):
         """Filter logs by level"""
+        self._update_filter_regex()
         self.apply_log_filters()
-    
+
     def filter_logs(self):
         """Filter logs by search text"""
+        self._update_filter_regex()
         self.apply_log_filters()
-    
+
+    def _update_filter_regex(self):
+        """更新编译后的正则表达式"""
+        import re
+        filter_text = self.log_filter_edit.text()
+        if filter_text:
+            try:
+                # 尝试编译为正则表达式（忽略大小写）
+                self._log_filter_regex = re.compile(filter_text, re.IGNORECASE)
+            except re.error:
+                # 如果正则语法错误，作为普通字符串处理
+                self._log_filter_regex = re.compile(re.escape(filter_text), re.IGNORECASE)
+        else:
+            self._log_filter_regex = None
+
+    def _match_log_entry(self, log_entry: str) -> bool:
+        """检查日志是否匹配当前过滤条件（支持正则）"""
+        # Level filter
+        level = self.log_level_combo.currentText()
+        if level != "All":
+            level_markers = {
+                "Verbose": " V ",
+                "Debug": " D ",
+                "Info": " I ",
+                "Warning": " W ",
+                "Error": " E ",
+                "Fatal": " F ",
+                "Logcat": "LOGCAT"
+            }
+            if level in level_markers and level_markers[level] not in log_entry:
+                return False
+
+        # Regex filter
+        if self._log_filter_regex:
+            if not self._log_filter_regex.search(log_entry):
+                return False
+
+        return True
+
     def apply_log_filters(self):
         """Apply all log filters"""
-        level = self.log_level_combo.currentText()
-        search_text = self.log_filter_edit.text().lower()
-        
-        filtered_logs = []
-        
-        for log in self.all_logs:
-            # Level filter
-            if level != "All":
-                level_markers = {
-                    "Verbose": " V ",
-                    "Debug": " D ",
-                    "Info": " I ",
-                    "Warning": " W ",
-                    "Error": " E ",
-                    "Fatal": " F ",
-                    "Logcat": "LOGCAT"
-                }
-                if level in level_markers and level_markers[level] not in log:
-                    continue
-            
-            # Search filter
-            if search_text and search_text not in log.lower():
-                continue
-            
-            filtered_logs.append(log)
-        
+        filtered_logs = [log for log in self.all_logs if self._match_log_entry(log)]
+
         self.output_text.setPlainText('\n'.join(filtered_logs))
         if self.auto_scroll_cb.isChecked():
             scrollbar = self.output_text.verticalScrollBar()
@@ -5621,10 +5640,14 @@ class ADBGUI(QMainWindow):
             timestamp = datetime.now().strftime("%y%m%d %H:%M:%S")
             for line in logs:
                 log_entry = f"[{timestamp}] [LOGCAT] {line}"
+                # 始终保存到 all_logs（用于后续过滤）
                 self.all_logs.append(log_entry)
-                self.output_text.append(log_entry)
 
-                # 写入文件
+                # 实时过滤：只显示匹配的日志
+                if self._match_log_entry(log_entry):
+                    self.output_text.append(log_entry)
+
+                # 写入文件（不受过滤影响，保存所有日志）
                 if self.log_file:
                     try:
                         self.log_file.write(log_entry + '\n')
