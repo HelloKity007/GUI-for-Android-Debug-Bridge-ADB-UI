@@ -298,7 +298,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.003.015"
+    APP_VERSION = "2.003.016"
 
     def __init__(self):
         super().__init__()
@@ -762,7 +762,24 @@ class ADBGUI(QMainWindow):
         self.log_file_label.setStyleSheet("color: #888888;")
         self.log_file_label.setMaximumWidth(200)
         log_controls.addWidget(self.log_file_label)
-        
+
+        # 日志文件夹路径（从配置读取，默认为 logs）
+        self._log_save_dir = self.config.get('logcat.save_dir', 'logs')
+
+        # 打开日志文件夹按钮
+        open_log_dir_btn = QPushButton("📂")
+        open_log_dir_btn.setToolTip("打开日志文件夹")
+        open_log_dir_btn.setMaximumWidth(30)
+        open_log_dir_btn.clicked.connect(self._open_log_dir)
+        log_controls.addWidget(open_log_dir_btn)
+
+        # 设置日志保存路径按钮
+        set_log_dir_btn = QPushButton("⚙")
+        set_log_dir_btn.setToolTip("设置日志保存路径")
+        set_log_dir_btn.setMaximumWidth(30)
+        set_log_dir_btn.clicked.connect(self._set_log_dir)
+        log_controls.addWidget(set_log_dir_btn)
+
         log_controls.addStretch()
         logs_layout.addLayout(log_controls)
         
@@ -1750,6 +1767,60 @@ class ADBGUI(QMainWindow):
         """Auto-scroll 状态变化时保存到配置"""
         enabled = state == Qt.CheckState.Checked.value
         self.config.set('logcat.auto_scroll', enabled)
+
+    def _open_log_dir(self):
+        """打开日志保存文件夹"""
+        import subprocess
+        import sys
+
+        # 获取日志目录的绝对路径
+        if os.path.isabs(self._log_save_dir):
+            log_dir = self._log_save_dir
+        else:
+            log_dir = os.path.join(self.project_dir, self._log_save_dir)
+
+        # 确保目录存在
+        os.makedirs(log_dir, exist_ok=True)
+
+        # 打开文件夹
+        if sys.platform == 'win32':
+            os.startfile(log_dir)
+        elif sys.platform == 'darwin':
+            subprocess.run(['open', log_dir])
+        else:
+            subprocess.run(['xdg-open', log_dir])
+
+    def _set_log_dir(self):
+        """设置日志保存路径"""
+        # 获取当前路径
+        if os.path.isabs(self._log_save_dir):
+            current_dir = self._log_save_dir
+        else:
+            current_dir = os.path.join(self.project_dir, self._log_save_dir)
+
+        # 弹出文件夹选择对话框
+        new_dir = QFileDialog.getExistingDirectory(
+            self,
+            "选择日志保存路径",
+            current_dir
+        )
+
+        if new_dir:
+            # 尝试转换为相对路径
+            try:
+                rel_path = os.path.relpath(new_dir, self.project_dir)
+                # 如果相对路径不包含 ..，使用相对路径
+                if not rel_path.startswith('..'):
+                    self._log_save_dir = rel_path
+                else:
+                    self._log_save_dir = new_dir
+            except ValueError:
+                # 不同盘符时使用绝对路径
+                self._log_save_dir = new_dir
+
+            # 保存到配置
+            self.config.set('logcat.save_dir', self._log_save_dir)
+            self.log(f"日志保存路径已设置为: {self._log_save_dir}", "INFO")
 
     def update_status(self, message):
         """Update status bar - thread safe"""
@@ -5615,7 +5686,11 @@ class ADBGUI(QMainWindow):
                 prefix = self.log_file_prefix.text() or "adb_logcat"
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"{prefix}_{timestamp}.log"
-                log_dir = os.path.join(self.project_dir, "logs")
+                # 使用配置的日志保存路径
+                if os.path.isabs(self._log_save_dir):
+                    log_dir = self._log_save_dir
+                else:
+                    log_dir = os.path.join(self.project_dir, self._log_save_dir)
                 os.makedirs(log_dir, exist_ok=True)
                 log_path = os.path.join(log_dir, filename)
                 try:
