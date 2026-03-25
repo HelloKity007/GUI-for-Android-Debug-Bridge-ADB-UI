@@ -8,6 +8,12 @@ __pycache__/
 dist/
 build/
 
+# PyInstaller
+scripts/build/
+scripts/dist/
+scripts/*.spec
+build_info.json
+
 # 运行时日志
 logs/
 *.log
