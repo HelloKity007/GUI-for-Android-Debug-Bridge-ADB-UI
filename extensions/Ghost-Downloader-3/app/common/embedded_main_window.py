@@ -150,17 +150,37 @@ class EmbeddedMainWindow(QWidget):
         self.navigationInterface.setCurrentItem(widget.objectName() if hasattr(widget, 'objectName') else 'settingInterface')
     
     def showAddTaskDialog(self, text: str = "", headers: dict = None):
-        """显示新建任务对话框"""
+        """显示新建任务面板（聚焦到内嵌面板）"""
         # 处理 text 可能是 bool 类型的情况
         if isinstance(text, bool):
             text = ""
         text_preview = str(text)[:50] if text else 'None'
         logger.info(f"showAddTaskDialog 被调用, text={text_preview}...")
         try:
-            from app.components.add_task_dialog import AddTaskOptionDialog
-            logger.debug("AddTaskOptionDialog 导入成功")
-            AddTaskOptionDialog.showAddTaskOptionDialog(text, self.window(), headers)
-            logger.info("对话框显示成功")
+            # 切换到任务列表界面
+            self.switchTo(self.taskInterface)
+
+            # 聚焦到内嵌任务面板
+            if hasattr(self.taskInterface, 'addTaskPanel'):
+                panel = self.taskInterface.addTaskPanel
+                # 如果有链接，添加到输入框
+                if text:
+                    current_text = panel.linkTextEdit.toPlainText()
+                    if current_text and text not in current_text.split('\n'):
+                        if not current_text.endswith('\n'):
+                            current_text += '\n'
+                        current_text += text
+                        panel.linkTextEdit.setPlainText(current_text)
+                    elif not current_text:
+                        panel.linkTextEdit.setPlainText(text)
+                # 聚焦输入框
+                panel.linkTextEdit.setFocus()
+                logger.info("已聚焦到内嵌任务面板")
+            else:
+                # 回退到弹出对话框
+                from app.components.add_task_dialog import AddTaskOptionDialog
+                AddTaskOptionDialog.showAddTaskOptionDialog(text, self.window(), headers)
+                logger.info("使用弹出对话框")
         except Exception as e:
             logger.error(f"showAddTaskDialog 失败: {e}")
             from app.common.logger_config import log_exception

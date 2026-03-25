@@ -15,6 +15,7 @@ from ..common.config import cfg
 from ..common.signal_bus import signalBus
 from ..components.custom_dialogs import DelDialog, PlanTaskDialog
 from ..components.task_card import TaskCard
+from ..components.inline_add_task_panel import InlineAddTaskPanel
 
 
 class TaskInterface(ScrollArea):
@@ -63,6 +64,10 @@ class TaskInterface(ScrollArea):
         self.expandLayout.setContentsMargins(11, 11, 11, 0)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        # ========== 内嵌新建任务面板 ==========
+        self.addTaskPanel = InlineAddTaskPanel(self.scrollWidget)
+        self.expandLayout.addWidget(self.addTaskPanel)
 
         # 全部开始/暂停 全部删除等其它功能区 TODO 计划任务
         self.horizontalLayout = QHBoxLayout()
