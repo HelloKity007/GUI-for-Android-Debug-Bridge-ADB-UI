@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import subprocess
 import threading
 import os
@@ -34,11 +34,123 @@ from PySide6.QtWidgets import (
     QDialog, QListWidget, QCheckBox, QRadioButton, QButtonGroup, QTabWidget
 )
 from PySide6.QtCore import Qt, QThread, Signal, Slot, QTimer, QProcess, QFileSystemWatcher, QMetaObject, Q_ARG, QMimeData
-from PySide6.QtGui import QFont, QColor, QPalette, QDrag, QShortcut, QKeySequence
+from PySide6.QtGui import QFont, QColor, QPalette, QDrag, QShortcut, QKeySequence, QFontDatabase
 
 # PyQt6 兼容别名
 pyqtSignal = Signal
 pyqtSlot = Slot
+
+
+UI_FONT_CANDIDATES = [
+    "Microsoft YaHei UI",
+    "Microsoft YaHei",
+    "DengXian",
+    "SimHei",
+    "Noto Sans CJK SC",
+    "Noto Sans SC",
+    "WenQuanYi Micro Hei",
+    "PingFang SC",
+    "Source Han Sans SC",
+    "Segoe UI",
+]
+
+MONO_FONT_CANDIDATES = [
+    "Cascadia Mono",
+    "Consolas",
+    "JetBrains Mono",
+    "DejaVu Sans Mono",
+    "Liberation Mono",
+]
+
+EMOJI_FONT_CANDIDATES = [
+    "Segoe UI Emoji",
+    "Noto Color Emoji",
+]
+
+_ui_font_family = "Sans Serif"
+_mono_font_family = "Monospace"
+_emoji_font_family = "Sans Serif"
+
+
+def _pick_font_family(available_families, candidates, default_family):
+    for family in candidates:
+        if family in available_families:
+            return family
+    return default_family
+
+
+def get_ui_font_family():
+    return _ui_font_family
+
+
+def get_mono_font_family():
+    return _mono_font_family
+
+
+def _css_font_token(family):
+    if family in {"sans-serif", "monospace", "serif"}:
+        return family
+    return f"'{family}'"
+
+
+def get_ui_font_css():
+    families = []
+    for family in (
+        _ui_font_family,
+        _emoji_font_family,
+        "Microsoft YaHei UI",
+        "Microsoft YaHei",
+        "Segoe UI",
+        "Segoe UI Emoji",
+        "Noto Sans CJK SC",
+        "Noto Sans SC",
+        "sans-serif",
+    ):
+        if family and family not in families:
+            families.append(family)
+    return ", ".join(_css_font_token(family) for family in families)
+
+
+def get_mono_font_css():
+    families = []
+    for family in (
+        _mono_font_family,
+        "Consolas",
+        "Cascadia Mono",
+        "DejaVu Sans Mono",
+        "Liberation Mono",
+        _ui_font_family,
+        "monospace",
+    ):
+        if family and family not in families:
+            families.append(family)
+    return ", ".join(_css_font_token(family) for family in families)
+
+
+def configure_application_fonts(app):
+    """为 Qt 配置稳定的中文和 emoji 字体回退。"""
+    global _ui_font_family, _mono_font_family, _emoji_font_family
+
+    font_db = QFontDatabase()
+    available_families = set(font_db.families())
+
+    _ui_font_family = _pick_font_family(available_families, UI_FONT_CANDIDATES, "Sans Serif")
+    _mono_font_family = _pick_font_family(available_families, MONO_FONT_CANDIDATES, "Monospace")
+    _emoji_font_family = _pick_font_family(available_families, EMOJI_FONT_CANDIDATES, _ui_font_family)
+
+    QFont.insertSubstitutions("Segoe UI", [_ui_font_family, _emoji_font_family])
+    QFont.insertSubstitutions("Microsoft YaHei", [_ui_font_family, _emoji_font_family])
+    QFont.insertSubstitutions("Microsoft YaHei UI", [_ui_font_family, _emoji_font_family])
+    QFont.insertSubstitutions("Consolas", [_mono_font_family, _ui_font_family])
+    QFont.insertSubstitutions("Segoe UI Emoji", [_emoji_font_family, _ui_font_family])
+
+    app.setFont(QFont(_ui_font_family, 10))
+    logger.info(
+        "字体配置已应用: ui=%s mono=%s emoji=%s",
+        _ui_font_family,
+        _mono_font_family,
+        _emoji_font_family,
+    )
 
 
 class SmoothScrollArea(QScrollArea):
@@ -461,12 +573,12 @@ class ADBGUI(QMainWindow):
         # Header with title
         header_layout = QHBoxLayout()
         self.title_label = QLabel("ADB Tool")
-        self.title_label.setFont(QFont('Segoe UI', 20, QFont.Weight.Bold))
+        self.title_label.setFont(QFont(get_ui_font_family(), 20, QFont.Weight.Bold))
         self.title_label.setStyleSheet(f"color: {self.colors['fg']};")
         header_layout.addWidget(self.title_label)
         
         self.subtitle_label = QLabel("Android Device Manager")
-        self.subtitle_label.setFont(QFont('Segoe UI', 10))
+        self.subtitle_label.setFont(QFont(get_ui_font_family(), 10))
         self.subtitle_label.setStyleSheet(f"color: {self.colors['text_secondary']};")
         header_layout.addWidget(self.subtitle_label)
         header_layout.addStretch()
@@ -786,7 +898,7 @@ class ADBGUI(QMainWindow):
         # Output text area
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
-        self.output_text.setFont(QFont('Consolas', 9))
+        self.output_text.setFont(QFont(get_mono_font_family(), 9))
         logs_layout.addWidget(self.output_text)
         
         # Store all logs for filtering
@@ -1332,7 +1444,7 @@ class ADBGUI(QMainWindow):
         css = f"""
         <style>
             body {{
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Helvetica, Arial, sans-serif;
+                font-family: {get_ui_font_css()};
                 font-size: 14px;
                 line-height: 1.5;
                 color: {text_color};
@@ -1349,7 +1461,7 @@ class ADBGUI(QMainWindow):
                 background-color: {code_bg};
                 padding: 0.2em 0.4em;
                 border-radius: 3px;
-                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                font-family: {get_mono_font_css()};
                 font-size: 0.9em;
             }}
             pre {{
@@ -5826,7 +5938,7 @@ class ADBGUI(QMainWindow):
                 border: 1px solid {self.colors['border']};
                 border-radius: 4px;
                 padding: 8px;
-                font-family: 'Segoe UI';
+                font-family: {get_ui_font_css()};
                 font-size: 9pt;
             }}
             QPushButton:hover {{
@@ -5869,7 +5981,7 @@ class ADBGUI(QMainWindow):
                 border-radius: 4px;
                 background-color: {'#1e1e1e' if self.dark_mode else '#1e1e1e'};
                 color: {'#d4d4d4' if self.dark_mode else '#d4d4d4'};
-                font-family: 'Consolas';
+                font-family: {get_mono_font_css()};
                 font-size: 9pt;
             }}
             QLabel {{
@@ -6421,7 +6533,7 @@ class ADBGUI(QMainWindow):
         
         # 标题
         title = QLabel("📜 开源组件清单")
-        title.setFont(QFont("Microsoft YaHei", 14, QFont.Weight.Bold))
+        title.setFont(QFont(get_ui_font_family(), 14, QFont.Weight.Bold))
         layout.addWidget(title)
         
         # Markdown显示区域
@@ -6661,7 +6773,7 @@ class ADBGUI(QMainWindow):
         
         # Mode selection
         mode_label = QLabel("Choose mode:")
-        mode_label.setFont(QFont('Segoe UI', 10, QFont.Weight.Bold))
+        mode_label.setFont(QFont(get_ui_font_family(), 10, QFont.Weight.Bold))
         mode_layout.addWidget(mode_label)
         
         mode_group = QButtonGroup(mode_dialog)
@@ -7653,6 +7765,7 @@ class ADBGUI(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
+    configure_application_fonts(app)
     window = ADBGUI()
     window.show()
     sys.exit(app.exec())

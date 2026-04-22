@@ -42,7 +42,7 @@ class MarkdownRenderer:
         css = f"""
         <style>
             body {{
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Helvetica, Arial, sans-serif;
+                font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', 'Segoe UI', 'Segoe UI Emoji', 'Noto Sans CJK SC', 'Noto Sans SC', Helvetica, Arial, sans-serif;
                 font-size: 14px;
                 line-height: 1.5;
                 color: {text_color};
@@ -59,7 +59,7 @@ class MarkdownRenderer:
                 background-color: {code_bg};
                 padding: 0.2em 0.4em;
                 border-radius: 3px;
-                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                font-family: 'Cascadia Mono', Consolas, 'DejaVu Sans Mono', 'Liberation Mono', Menlo, monospace;
                 font-size: 0.9em;
             }}
             pre {{
