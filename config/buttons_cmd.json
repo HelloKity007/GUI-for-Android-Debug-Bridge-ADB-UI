@@ -194,6 +194,12 @@
           "accent": true
         },
         {
+          "id": "gpio_control",
+          "label": "🔧 Gpio Control",
+          "action": "show_gpio_control",
+          "accent": true
+        },
+        {
           "id": "factory_menu",
           "label": "🏭 工厂菜单",
           "action": "factory_menu",

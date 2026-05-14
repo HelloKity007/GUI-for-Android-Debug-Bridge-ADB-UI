@@ -8,12 +8,14 @@ from .jadx_decompiler import JadxDecompilerDialog
 from .test_scripts import TestScriptsDialog
 from .cluster_control import ClusterControlDialog
 from .plugin_manager_dialog import PluginManagerDialog
+from .gpio_control import GPIOControlDialog
 
 __all__ = [
     'AppManagerDialog',
-    'FileManagerDialog', 
+    'FileManagerDialog',
     'JadxDecompilerDialog',
     'TestScriptsDialog',
     'ClusterControlDialog',
-    'PluginManagerDialog'
+    'PluginManagerDialog',
+    'GPIOControlDialog'
 ]

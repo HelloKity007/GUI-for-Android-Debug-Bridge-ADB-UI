@@ -68,67 +68,6 @@
       ]
     },
     {
-      "id": "device_operations",
-      "name": "⚡ Device Operations",
-      "order": 2,
-      "buttons": [
-        {
-          "id": "screenshot",
-          "label": "📸 Take Screenshot",
-          "action": "take_screenshot",
-          "accent": false
-        },
-        {
-          "id": "reboot_recovery",
-          "label": "🔧 Reboot to Recovery",
-          "action": "reboot_recovery",
-          "accent": false
-        },
-        {
-          "id": "reboot_bootloader",
-          "label": "⚙️ Reboot to Bootloader",
-          "action": "reboot_bootloader",
-          "accent": false
-        },
-        {
-          "id": "reboot_loader",
-          "label": "📦 Reboot to Loader",
-          "action": "reboot_loader",
-          "accent": false
-        },
-        {
-          "id": "adb_root_remount_copy_40",
-          "label": "🔐 ADB Root & Remount",
-          "action": "adb_root_remount",
-          "accent": false
-        },
-        {
-          "id": "reboot_copy_38_copy_39",
-          "label": "🔄 Reboot Device",
-          "action": "reboot_device",
-          "accent": false
-        },
-        {
-          "id": "test_scripts",
-          "label": "🧪 Test Scripts",
-          "action": "show_test_scripts",
-          "accent": true
-        },
-        {
-          "id": "jadx",
-          "label": "🔍 JADX Decompiler",
-          "action": "show_jadx_decompiler",
-          "accent": true
-        },
-        {
-          "id": "factory_menu",
-          "label": "🏭 工厂菜单",
-          "action": "factory_menu",
-          "accent": false
-        }
-      ]
-    },
-    {
       "id": "app_management",
       "name": "📱 App Management",
       "order": 3,
@@ -180,6 +119,91 @@
           "label": "🚫 DeGoogle Device",
           "action": "degoogle_device",
           "accent": true
+        }
+      ]
+    },
+    {
+      "id": "device_operations",
+      "name": "⚡ Device Operations",
+      "order": 2,
+      "buttons": [
+        {
+          "id": "screenshot",
+          "label": "📸 Take Screenshot",
+          "action": "take_screenshot",
+          "accent": false
+        },
+        {
+          "id": "reboot_recovery",
+          "label": "🔧 Reboot to Recovery",
+          "action": "reboot_recovery",
+          "accent": false
+        },
+        {
+          "id": "reboot_bootloader",
+          "label": "⚙️ Reboot to Bootloader",
+          "action": "reboot_bootloader",
+          "accent": false
+        },
+        {
+          "id": "fastboot_oem_unlock",
+          "label": "🔓 OEM Unlock",
+          "action": "fastboot_oem_unlock",
+          "accent": false
+        },
+        {
+          "id": "fastboot_reboot",
+          "label": "🔁 Fastboot Reboot",
+          "action": "fastboot_reboot",
+          "accent": false
+        },
+        {
+          "id": "reboot_loader",
+          "label": "📦 Reboot to Loader",
+          "action": "reboot_loader",
+          "accent": false
+        },
+        {
+          "id": "reboot_update",
+          "label": "🔄 Reboot to Update",
+          "action": "reboot_update",
+          "accent": false
+        },
+        {
+          "id": "adb_root_remount_copy_40",
+          "label": "🔐 ADB Root & Remount",
+          "action": "adb_root_remount",
+          "accent": false
+        },
+        {
+          "id": "reboot_copy_38_copy_39",
+          "label": "🔄 Reboot Device",
+          "action": "reboot_device",
+          "accent": false
+        },
+        {
+          "id": "test_scripts",
+          "label": "🧪 Test Scripts",
+          "action": "show_test_scripts",
+          "accent": true
+        },
+        {
+          "id": "jadx",
+          "label": "🔍 JADX Decompiler",
+          "action": "show_jadx_decompiler",
+          "accent": true
+        },
+        {
+          "id": "gpio_control",
+          "label": "🔧 Gpio Control",
+          "action": "show_gpio_control",
+          "accent": true
+        },
+        {
+          "id": "factory_menu",
+          "label": "🏭 工厂菜单",
+          "action": "factory_menu",
+          "accent": false
         }
       ]
     },

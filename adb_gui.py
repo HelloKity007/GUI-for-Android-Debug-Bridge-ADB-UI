@@ -170,7 +170,8 @@ from core import ADBManager, ScrcpyManager
 from ui import ThemeManager, MarkdownRenderer
 from dialogs import (
     FileManagerDialog, AppManagerDialog, TestScriptsDialog,
-    ClusterControlDialog, JadxDecompilerDialog, PluginManagerDialog
+    ClusterControlDialog, JadxDecompilerDialog, PluginManagerDialog,
+    GPIOControlDialog
 )
 
 # Import plugin system
@@ -461,13 +462,26 @@ class ADBGUI(QMainWindow):
         if getattr(sys, 'frozen', False):
             # Running as compiled executable
             project_dir = os.path.dirname(sys.executable)
+            # PyInstaller bundles data into _internal/ directory
+            resource_dir = getattr(sys, '_MEIPASS', project_dir)
+            # Copy writable config files from bundle to exe dir on first run
+            for cfg_name in ('config.json', 'buttons_cmd.json'):
+                bundled_cfg = os.path.join(resource_dir, cfg_name)
+                user_cfg = os.path.join(project_dir, cfg_name)
+                if os.path.exists(bundled_cfg) and not os.path.exists(user_cfg):
+                    import shutil
+                    shutil.copy2(bundled_cfg, user_cfg)
+                    logger.info("已复制配置文件到用户目录: %s", cfg_name)
         else:
             # Running as script
             project_dir = os.path.dirname(os.path.abspath(__file__))
-        
+            resource_dir = project_dir
+
         self.project_dir = project_dir
-        
-        # Load config.json
+        self.resource_dir = resource_dir
+        logger.info("project_dir=%s resource_dir=%s", project_dir, resource_dir)
+
+        # Load config.json (优先读用户目录，打包模式下从 _internal 复制)
         config_file = os.path.join(project_dir, 'config.json')
         self.config = ConfigManager(config_file)
         
@@ -482,12 +496,12 @@ class ADBGUI(QMainWindow):
         self.apply_theme()
         
         # Check for saved ADB path from config.json
-        saved_adb_path = self.config.get_extension_path('adb', self.project_dir)
+        saved_adb_path = self.config.get_extension_path('adb', self.resource_dir)
         if not saved_adb_path or not os.path.exists(saved_adb_path):
             saved_adb_path = None
-        
+
         # Initialize ScrcpyManager with config path
-        scrcpy_path = self.config.get_extension_path('scrcpy', self.project_dir)
+        scrcpy_path = self.config.get_extension_path('scrcpy', self.resource_dir)
         scrcpy_enabled = self.config.is_extension_enabled('scrcpy')
         
         if scrcpy_enabled and scrcpy_path and os.path.exists(scrcpy_path):
@@ -1091,7 +1105,7 @@ class ADBGUI(QMainWindow):
 
         try:
             # 从配置文件读取路径
-            config_path = Path(self.project_dir) / "plugins" / "plugins_config.json"
+            config_path = Path(self.resource_dir) / "plugins" / "plugins_config.json"
             if config_path.exists():
                 import json
                 with open(config_path, 'r', encoding='utf-8') as f:
@@ -1103,7 +1117,7 @@ class ADBGUI(QMainWindow):
 
             logger.info(f"Ghost Downloader 路径: {module_path}")
 
-            gd3_path = Path(self.project_dir) / module_path
+            gd3_path = Path(self.resource_dir) / module_path
             if not gd3_path.exists():
                 raise FileNotFoundError(f"Ghost Downloader 目录不存在: {gd3_path}")
 
@@ -1377,11 +1391,11 @@ class ADBGUI(QMainWindow):
     def load_command_reference(self):
         """Load ADB command reference from awesome-adb with Markdown rendering"""
         # 从config.json获取README路径
-        readme_path = self.config.get_extension_path('awesome_adb', self.project_dir)
+        readme_path = self.config.get_extension_path('awesome_adb', self.resource_dir)
         
         # 如果config中没有配置,使用默认路径
         if not readme_path:
-            readme_path = os.path.join(self.project_dir, 'extensions', 'awesome-adb-readme', 'README.md')
+            readme_path = os.path.join(self.resource_dir, 'extensions', 'awesome-adb-readme', 'README.md')
         
         # 保存路径供文件监控使用
         self.readme_path = readme_path
@@ -2436,10 +2450,10 @@ class ADBGUI(QMainWindow):
     def load_buttons_config(self):
         """Load buttons configuration from JSON file"""
         # 优先从 config 目录加载
-        config_path = os.path.join(self.project_dir, 'config', 'buttons_cmd.json')
+        config_path = os.path.join(self.resource_dir, 'config', 'buttons_cmd.json')
         if not os.path.exists(config_path):
             # 兼容旧路径
-            config_path = os.path.join(self.project_dir, 'buttons_cmd.json')
+            config_path = os.path.join(self.resource_dir, 'buttons_cmd.json')
         try:
             if os.path.exists(config_path):
                 with open(config_path, 'r', encoding='utf-8') as f:
@@ -2527,6 +2541,7 @@ class ADBGUI(QMainWindow):
             'reboot_update': self.reboot_update,
             'adb_root_remount': self.adb_root_remount,
             'show_test_scripts': self.show_test_scripts,
+            'show_gpio_control': self.show_gpio_control,
             'show_jadx_decompiler': self.show_jadx_decompiler,
             'quick_enable_dev_options': self.quick_enable_dev_options,
             'quick_disable_dev_options': self.quick_disable_dev_options,
@@ -3126,10 +3141,19 @@ class ADBGUI(QMainWindow):
         if not self.current_device:
             QMessageBox.warning(self, "No Device", "Please select a device first")
             return
-        
+
         dialog = TestScriptsDialog(self, self.adb, self.current_device, self.colors, self.project_dir)
         dialog.exec()
-    
+
+    def show_gpio_control(self):
+        """Show GPIO control dialog"""
+        if not self.current_device:
+            QMessageBox.warning(self, "No Device", "Please select a device first")
+            return
+
+        dialog = GPIOControlDialog(self, self.adb, self.current_device, self.colors)
+        dialog.exec()
+
     def show_cluster_control(self):
         """Show cluster control for multi-device management"""
         # Note: Cluster control works with all connected devices, not just current device
@@ -3143,7 +3167,7 @@ class ADBGUI(QMainWindow):
         import subprocess
         from pathlib import Path
         
-        extensions_dir = Path(self.project_dir) / "extensions" / "Ghost-Downloader-3"
+        extensions_dir = Path(self.resource_dir) / "extensions" / "Ghost-Downloader-3"
         
         if not extensions_dir.exists():
             self.log_output("❌ 未找到 Ghost Downloader 路径")
@@ -3176,7 +3200,7 @@ class ADBGUI(QMainWindow):
         try:
             from pathlib import Path
             # 尝试从 Ghost Downloader 配置文件读取下载路径
-            config_path = Path(self.project_dir) / "extensions" / "Ghost-Downloader-3" / "Ghost Downloader 配置文件.json"
+            config_path = Path(self.resource_dir) / "extensions" / "Ghost-Downloader-3" / "Ghost Downloader 配置文件.json"
             if config_path.exists():
                 with open(config_path, 'r', encoding='utf-8') as f:
                     config = json.load(f)
@@ -3234,7 +3258,7 @@ class ADBGUI(QMainWindow):
         def __init__(self, links, project_dir, parent=None):
             super().__init__(parent)
             self.links = links
-            self.project_dir = project_dir
+            self.resource_dir = project_dir
             self.download_process = None
             
         def check_websocket_available(self, ws_url):
@@ -3265,7 +3289,7 @@ class ADBGUI(QMainWindow):
                 self.status_signal.emit("✅ 检测到 Ghost Downloader 服务已运行")
             else:
                 # 启动 Ghost Downloader 后台服务
-                extensions_dir = Path(self.project_dir) / "extensions" / "Ghost-Downloader-3"
+                extensions_dir = Path(self.resource_dir) / "extensions" / "Ghost-Downloader-3"
                 main_script = extensions_dir / "Ghost-Downloader-3.py"
                 
                 if not main_script.exists():
@@ -3367,7 +3391,7 @@ class ADBGUI(QMainWindow):
         self.update_download_status("🚀 正在启动下载任务...")
         
         # 创建异步线程
-        self.download_task_thread = self.DownloadTaskThread(links, self.project_dir, self)
+        self.download_task_thread = self.DownloadTaskThread(links, self.resource_dir, self)
         self.download_task_thread.status_signal.connect(self.update_download_status)
         self.download_task_thread.finished_signal.connect(self._on_download_tasks_finished)
         self.download_task_thread.start()
@@ -3412,7 +3436,7 @@ class ADBGUI(QMainWindow):
         import subprocess
 
         # 从配置文件读取路径
-        config_path = Path(self.project_dir) / "plugins" / "plugins_config.json"
+        config_path = Path(self.resource_dir) / "plugins" / "plugins_config.json"
         if config_path.exists():
             import json
             with open(config_path, 'r', encoding='utf-8') as f:
@@ -3424,7 +3448,7 @@ class ADBGUI(QMainWindow):
             module_path = 'extensions/Ghost-Downloader-3'
             main_script_name = 'Ghost-Downloader-3.py'
 
-        extensions_dir = Path(self.project_dir) / module_path
+        extensions_dir = Path(self.resource_dir) / module_path
         main_script = extensions_dir / main_script_name
 
         if not main_script.exists():
@@ -3668,7 +3692,7 @@ class ADBGUI(QMainWindow):
         # Initialize plugin system if not already done
         if not hasattr(self, '_plugin_manager'):
             self._event_bus = EventBus()
-            plugins_dir = os.path.join(self.project_dir, 'plugins')
+            plugins_dir = os.path.join(self.resource_dir, 'plugins')
             # Create plugin API
             self._plugin_api = PluginAPI(
                 self.adb, 
@@ -5815,7 +5839,7 @@ class ADBGUI(QMainWindow):
             # 获取 ADB 路径
             adb_path = self.adb.adb_path
             if adb_path and not os.path.isabs(adb_path):
-                adb_path = os.path.join(self.project_dir, adb_path)
+                adb_path = os.path.join(self.resource_dir, adb_path)
 
             self.log("Starting logcat...")
             self.update_status("Logcat running...")
@@ -5895,7 +5919,7 @@ class ADBGUI(QMainWindow):
             return relative_path
         
         # Convert relative path to absolute
-        return os.path.normpath(os.path.join(self.project_dir, relative_path))
+        return os.path.normpath(os.path.join(self.resource_dir, relative_path))
     
     def load_degoogle_state(self):
         """Load DeGoogle state from file"""
@@ -6450,7 +6474,7 @@ class ADBGUI(QMainWindow):
     
     def _save_buttons_config(self):
         """Save buttons configuration to JSON file"""
-        config_path = os.path.join(self.project_dir, 'buttons_cmd.json')
+        config_path = os.path.join(self.resource_dir, 'buttons_cmd.json')
         try:
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.buttons_config, f, indent=2, ensure_ascii=False)
@@ -6520,8 +6544,8 @@ class ADBGUI(QMainWindow):
         from PySide6.QtCore import QFileSystemWatcher
         
         # 组件清单文件路径
-        components_file = os.path.join(self.project_dir, 'docs', 'OPENSOURCE_COMPONENTS.md')
-        print(f"DEBUG: project_dir = {self.project_dir}")
+        components_file = os.path.join(self.resource_dir, 'docs', 'OPENSOURCE_COMPONENTS.md')
+        print(f"DEBUG: resource_dir = {self.resource_dir}")
         print(f"DEBUG: components_file = {components_file}")
         print(f"DEBUG: exists = {os.path.exists(components_file)}")
         

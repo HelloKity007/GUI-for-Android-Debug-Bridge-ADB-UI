@@ -1,0 +1,78 @@
+如GPIO7 GPIO_B4就是(7 << RK_GPIO_BANK_OFFSET) | GPIO_B4
+简单点的写法就是7x32+12=236
+GPIO7_B4=236 //M180_V3 << SPICLLK
+GPIO7_B5=237 //M180_V3 << SPICSN
+
+define RK_GPIO0 0
+define RK_GPIO1 1
+define RK_GPIO2 2
+define RK_GPIO3 3
+define RK_GPIO4 4
+define RK_GPIO6 6
+define RK_PA0 0
+define RK_PA1 1
+define RK_PA2 2
+define RK_PA3 3
+define RK_PA4 4
+define RK_PA5 5
+define RK_PA6 6
+define RK_PA7 7
+define RK_PB0 8
+define RK_PB1 9
+define RK_PB2 10
+define RK_PB3 11
+define RK_PB4 12
+define RK_PB5 13
+define RK_PB6 14
+define RK_PB7 15
+define RK_PC0 16
+define RK_PC1 17
+define RK_PC2 18
+define RK_PC3 19
+define RK_PC4 20
+define RK_PC5 21
+define RK_PC6 22
+define RK_PC7 23
+define RK_PD0 24
+define RK_PD1 25
+define RK_PD2 26
+define RK_PD3 27
+define RK_PD4 28
+define RK_PD5 29
+define RK_PD6 30
+define RK_PD7 31
+
+define RK_FUNC_GPIO 0
+define RK_FUNC_0 0
+define RK_FUNC_1 1
+define RK_FUNC_2 2
+define RK_FUNC_3 3
+define RK_FUNC_4 4
+define RK_FUNC_5 5
+define RK_FUNC_6 6
+define RK_FUNC_7 7
+define RK_FUNC_8 8
+define RK_FUNC_9 9
+define RK_FUNC_10 10
+define RK_FUNC_11 11
+define RK_FUNC_12 12
+define RK_FUNC_13 13
+define RK_FUNC_14 14
+define RK_FUNC_15 15
+
+define PCA_IO0_0 0
+define PCA_IO0_1 1
+define PCA_IO0_2 2
+define PCA_IO0_3 3
+define PCA_IO0_4 4
+define PCA_IO0_5 5
+define PCA_IO0_6 6
+define PCA_IO0_7 7
+define PCA_IO1_0 8
+define PCA_IO1_1 9
+define PCA_IO1_2 10
+define PCA_IO1_3 11
+define PCA_IO1_4 12
+define PCA_IO1_5 13
+define PCA_IO1_6 14
+define PCA_IO1_7 15
