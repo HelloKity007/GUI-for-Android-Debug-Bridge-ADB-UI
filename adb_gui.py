@@ -8,6 +8,12 @@ import json
 from pathlib import Path
 import logging
 
+# 设置Windows任务栏图标 - 必须在创建窗口之前调用
+if sys.platform == 'win32':
+    import ctypes
+    myappid = 'lango.adb.gui.tool.v2.3.1'  # 应用唯一ID
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
 # 配置日志
 from datetime import datetime
 _log_dir = Path(__file__).parent / "logs"
