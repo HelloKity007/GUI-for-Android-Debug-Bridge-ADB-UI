@@ -3177,13 +3177,20 @@ class ADBGUI(QMainWindow):
         dialog.exec()
 
     def show_gpio_control(self):
-        """Show GPIO control dialog"""
+        """Show GPIO control dialog (non-modal)"""
         if not self.current_device:
             QMessageBox.warning(self, "No Device", "Please select a device first")
             return
 
-        dialog = GPIOControlDialog(self, self.adb, self.current_device, self.colors)
-        dialog.exec()
+        # 使用非模态对话框，允许同时操作主界面
+        if not hasattr(self, '_gpio_dialog') or self._gpio_dialog is None:
+            self._gpio_dialog = GPIOControlDialog(self, self.adb, self.current_device, self.colors)
+            self._gpio_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+            self._gpio_dialog.destroyed.connect(lambda: setattr(self, '_gpio_dialog', None))
+
+        self._gpio_dialog.show()
+        self._gpio_dialog.raise_()
+        self._gpio_dialog.activateWindow()
 
     def show_cluster_control(self):
         """Show cluster control for multi-device management"""
