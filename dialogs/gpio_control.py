@@ -8,7 +8,7 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QTextEdit, QMessageBox, QGroupBox, QLineEdit, QComboBox,
-    QWidget, QFrame
+    QWidget, QFrame, QApplication
 )
 from PySide6.QtCore import Qt, Signal
 
@@ -286,11 +286,20 @@ class GPIOControlDialog(QDialog):
         preview_group = QGroupBox("👁️ 命令预览")
         preview_layout = QVBoxLayout(preview_group)
 
+        preview_row = QHBoxLayout()
         self.preview_label = QLabel("-")
         self.preview_label.setStyleSheet(
-            "font-family: monospace; background-color: #2b2b2b; padding: 10px; border-radius: 4px;"
+            "font-family: monospace; color: #00ff00; background-color: #1e1e1e; padding: 10px; border-radius: 4px; border: 1px solid #333333;"
         )
-        preview_layout.addWidget(self.preview_label)
+        self.preview_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        preview_row.addWidget(self.preview_label)
+
+        copy_btn = QPushButton("📋 复制")
+        copy_btn.setFixedWidth(60)
+        copy_btn.clicked.connect(self.copy_preview_command)
+        preview_row.addWidget(copy_btn)
+
+        preview_layout.addLayout(preview_row)
 
         layout.addWidget(preview_group)
 
@@ -461,6 +470,16 @@ class GPIOControlDialog(QDialog):
             self.calc_num_result.setText(f"→ {error}")
         else:
             self.calc_num_result.setText(f"→ {number}")
+
+    def copy_preview_command(self):
+        """复制命令预览内容到剪贴板"""
+        command = self.preview_label.text()
+        if command and command != "-":
+            clipboard = QApplication.clipboard()
+            clipboard.setText(command)
+            self.log_signal.emit(f"Copied: {command}")
+        else:
+            self.log_signal.emit("No command to copy")
 
     def update_device(self, device_id):
         """更新设备ID（由主界面调用同步设备信息）"""
