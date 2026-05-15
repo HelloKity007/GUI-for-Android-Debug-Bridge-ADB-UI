@@ -2222,10 +2222,15 @@ class ADBGUI(QMainWindow):
             elif not hasattr(self, 'device_info_label') or self.device_info_label.text() != display_text:
                 self.device_info_label.setText(display_text)
                 self.device_info_label.setStyleSheet(f"color: {self.colors['success']};")
+
+            # 同步GPIO Control窗口的设备信息
+            self._sync_gpio_dialog_device()
         else:
             self.current_device = None
             # 清空扩展信息
             self._clear_device_extended_info()
+            # 同步GPIO Control窗口的设备信息
+            self._sync_gpio_dialog_device()
 
     def _update_device_extended_info(self, device_id):
         """更新设备扩展信息（Serial, WiFi, Ethernet, Board）"""
@@ -3177,20 +3182,26 @@ class ADBGUI(QMainWindow):
         dialog.exec()
 
     def show_gpio_control(self):
-        """Show GPIO control dialog (non-modal)"""
+        """Show GPIO control dialog (non-modal, independent window)"""
         if not self.current_device:
             QMessageBox.warning(self, "No Device", "Please select a device first")
             return
 
-        # 使用非模态对话框，允许同时操作主界面
+        # 使用非模态对话框，作为独立窗口不受主界面最小化影响
         if not hasattr(self, '_gpio_dialog') or self._gpio_dialog is None:
-            self._gpio_dialog = GPIOControlDialog(self, self.adb, self.current_device, self.colors)
+            # parent=None 使对话框成为独立窗口
+            self._gpio_dialog = GPIOControlDialog(None, self.adb, self.current_device, self.colors)
             self._gpio_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
             self._gpio_dialog.destroyed.connect(lambda: setattr(self, '_gpio_dialog', None))
 
         self._gpio_dialog.show()
         self._gpio_dialog.raise_()
         self._gpio_dialog.activateWindow()
+
+    def _sync_gpio_dialog_device(self):
+        """同步GPIO Control窗口的设备信息"""
+        if hasattr(self, '_gpio_dialog') and self._gpio_dialog is not None:
+            self._gpio_dialog.update_device(self.current_device)
 
     def show_cluster_control(self):
         """Show cluster control for multi-device management"""

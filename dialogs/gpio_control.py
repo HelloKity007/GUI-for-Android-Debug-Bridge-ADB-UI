@@ -457,6 +457,14 @@ class GPIOControlDialog(QDialog):
         else:
             self.calc_num_result.setText(f"→ {number}")
 
+    def update_device(self, device_id):
+        """更新设备ID（由主界面调用同步设备信息）"""
+        self.device_id = device_id
+        if device_id:
+            self.log_signal.emit(f"Device updated: {device_id}")
+        else:
+            self.log_signal.emit("Device disconnected")
+
     def append_log(self, message):
         """追加日志到控制台"""
         timestamp = datetime.now().strftime("%H:%M:%S")
