@@ -34,7 +34,7 @@ from PySide6.QtWidgets import (
     QDialog, QListWidget, QCheckBox, QRadioButton, QButtonGroup, QTabWidget
 )
 from PySide6.QtCore import Qt, QThread, Signal, Slot, QTimer, QProcess, QFileSystemWatcher, QMetaObject, Q_ARG, QMimeData
-from PySide6.QtGui import QFont, QColor, QPalette, QDrag, QShortcut, QKeySequence, QFontDatabase
+from PySide6.QtGui import QFont, QColor, QPalette, QDrag, QShortcut, QKeySequence, QFontDatabase, QIcon, QPixmap, QPainter, QBrush, QPen
 
 # PyQt6 兼容别名
 pyqtSignal = Signal
@@ -419,6 +419,9 @@ class ADBGUI(QMainWindow):
         self.setGeometry(100, 100, 1200, 800)
         self.setMinimumSize(1000, 700)
 
+        # 设置窗口图标
+        self.setWindowIcon(self._create_app_icon())
+
         # 设备信息缓存 {device_id: {serial, board, wifi_mac, wifi_ip, eth_mac, eth_ip}}
         self.device_info_cache = {}
         self.info_worker = None  # 后台获取信息的线程
@@ -572,7 +575,29 @@ class ADBGUI(QMainWindow):
         self.custom_dialog_ready.connect(self._show_custom_dialog)
         # Connect signal for app list dialog
         self.app_list_ready.connect(self.show_app_list_window)
-    
+
+    def _create_app_icon(self):
+        """创建应用程序图标"""
+        pixmap = QPixmap(64, 64)
+        pixmap.fill(QColor(0, 0, 0, 0))  # 透明背景
+
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # 绘制圆形背景
+        painter.setBrush(QBrush(QColor('#0078d4')))
+        painter.setPen(QPen(QColor('#005a9e'), 2))
+        painter.drawEllipse(4, 4, 56, 56)
+
+        # 绘制ADB文字
+        painter.setPen(QPen(QColor('#ffffff')))
+        font = QFont('Arial', 16, QFont.Weight.Bold)
+        painter.setFont(font)
+        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, 'ADB')
+
+        painter.end()
+        return QIcon(pixmap)
+
     def setup_ui(self):
         """Setup the modern user interface"""
         # Central widget
