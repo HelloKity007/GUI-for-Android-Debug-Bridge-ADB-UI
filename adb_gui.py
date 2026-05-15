@@ -417,7 +417,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.3.2"
+    APP_VERSION = "2.3.3"
 
     def __init__(self):
         super().__init__()
@@ -3183,9 +3183,7 @@ class ADBGUI(QMainWindow):
 
     def show_gpio_control(self):
         """Show GPIO control dialog (non-modal, independent window)"""
-        if not self.current_device:
-            QMessageBox.warning(self, "No Device", "Please select a device first")
-            return
+        # 允许无设备时打开（可用于GPIO计算器功能）
 
         # 使用非模态对话框，作为独立窗口不受主界面最小化影响
         if not hasattr(self, '_gpio_dialog') or self._gpio_dialog is None:

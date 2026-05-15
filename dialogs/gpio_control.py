@@ -402,6 +402,11 @@ class GPIOControlDialog(QDialog):
             QMessageBox.warning(self, "警告", "请输入GPIO编号或名称")
             return
 
+        # 检查设备连接
+        if not self.device_id:
+            QMessageBox.warning(self, "警告", "未连接设备，请先连接设备后再执行命令\n\nGPIO计算器功能可正常使用")
+            return
+
         platform_hint = self.get_platform_hint()
         number, platform = GPIOCalculator.parse_gpio_name(text, platform_hint)
         if number is None:
