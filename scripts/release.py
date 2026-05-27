@@ -23,7 +23,7 @@ class ReleaseManager:
     def __init__(self):
         self.project_dir = Path(__file__).parent.parent
         self.release_dir = self.project_dir / "release"
-        self.dist_dir = self.project_dir / "scripts" / "dist"
+        self.dist_dir = self.project_dir / "dist"
         self.version_manager = get_version_manager()
 
         # 确保 release 目录存在

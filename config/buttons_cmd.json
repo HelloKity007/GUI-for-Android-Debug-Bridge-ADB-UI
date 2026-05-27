@@ -200,6 +200,12 @@
           "accent": true
         },
         {
+          "id": "firmware_upgrade",
+          "label": "🔧 RK Firmware Upgrade",
+          "action": "show_firmware_upgrade",
+          "accent": true
+        },
+        {
           "id": "factory_menu",
           "label": "🏭 工厂菜单",
           "action": "factory_menu",

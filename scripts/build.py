@@ -19,7 +19,7 @@ class Builder:
     """打包构建器"""
     
     def __init__(self):
-        self.project_dir = Path(__file__).parent
+        self.project_dir = Path(__file__).parent.parent
         self.dist_dir = self.project_dir / "dist"
         self.build_dir = self.project_dir / "build"
         self.version_manager = get_version_manager()
@@ -148,13 +148,16 @@ class Builder:
         # device_groups.json
         if Path("device_groups.json").exists():
             cmd.extend(["--add-data", f"device_groups.json{os.pathsep}."])
+        # docs 目录
+        if Path("docs").exists():
+            cmd.extend(["--add-data", f"docs{os.pathsep}docs"])
         
+        # 排除 PyQt6（避免与 PySide6 冲突）
+        cmd.extend(["--exclude-module", "PyQt6"])
+        cmd.extend(["--exclude-module", "PyQt6.sip"])
+
         # 隐藏导入
         hidden_imports = [
-            "PyQt6.sip",
-            "PyQt6.QtCore",
-            "PyQt6.QtGui",
-            "PyQt6.QtWidgets",
             "qfluentwidgets",
             "websocket",
             "loguru",

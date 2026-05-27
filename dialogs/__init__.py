@@ -9,6 +9,7 @@ from .test_scripts import TestScriptsDialog
 from .cluster_control import ClusterControlDialog
 from .plugin_manager_dialog import PluginManagerDialog
 from .gpio_control import GPIOControlDialog
+from .firmware_upgrade import FirmwareUpgradeDialog
 
 __all__ = [
     'AppManagerDialog',
@@ -17,5 +18,6 @@ __all__ = [
     'TestScriptsDialog',
     'ClusterControlDialog',
     'PluginManagerDialog',
-    'GPIOControlDialog'
+    'GPIOControlDialog',
+    'FirmwareUpgradeDialog'
 ]

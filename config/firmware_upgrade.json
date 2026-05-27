@@ -1,0 +1,46 @@
+{
+    "download": {
+        "output_dir": "E:/debug_local/log/firmware",
+        "server": "auto",
+        "threads": 8
+    },
+    "upgrade_tool_path": "extensions/upgrade_tool_v2.33_for_window/upgrade_tool.exe",
+    "partitions": [
+        {
+            "enabled": false,
+            "name": "Full Image",
+            "image": "update.img",
+            "is_full_image": true
+        },
+        {
+            "enabled": false,
+            "name": "uboot",
+            "image": "uboot.img",
+            "is_full_image": false
+        },
+        {
+            "enabled": true,
+            "name": "boot",
+            "image": "boot.img",
+            "is_full_image": false
+        },
+        {
+            "enabled": false,
+            "name": "loader",
+            "image": "rk3576_spl_loader_v1.08.105.bin",
+            "is_full_image": false
+        },
+        {
+            "enabled": false,
+            "name": "",
+            "image": "",
+            "is_full_image": false
+        },
+        {
+            "enabled": false,
+            "name": "",
+            "image": "",
+            "is_full_image": false
+        }
+    ]
+}

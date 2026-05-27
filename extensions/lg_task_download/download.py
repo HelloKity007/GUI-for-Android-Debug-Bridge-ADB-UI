@@ -8,6 +8,17 @@ import threading
 import urllib.parse
 import urllib.request
 import concurrent.futures
+import io
+
+#$XBH_AI_PATCH_START
+# 修复 Windows CMD 环境下的编码兼容性问题
+# 强制 stdout/stderr 使用 UTF-8 编码，errors='replace' 避免编码失败
+#$XBH_AI_PATCH_MODIFY
+if sys.platform == 'win32':
+    # Windows 环境下强制 UTF-8 输出，不兼容字符替换为 ?
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+#$XBH_AI_PATCH_END
 
 TO_ENCODE = {
     "低存储检测对策": "%E4%BD%8E%E5%AD%98%E5%82%A8%E6%A3%80%E6%B5%8B%E5%AF%B9%E7%AD%96",
@@ -131,11 +142,21 @@ class MultiThreadDownloader:
         
         bar_width = 25
         filled = int(bar_width * self.downloaded / self.total_size) if self.total_size > 0 else 0
-        bar = '█' * filled + '░' * (bar_width - filled)
+        #$XBH_AI_PATCH_START
+        # bar = '█' * filled + '░' * (bar_width - filled)
+        #$XBH_AI_PATCH_MODIFY
+        # 使用 ASCII 字符替代 Unicode 进度条字符，兼容 GBK/CMD 环境
+        bar = '#' * filled + '-' * (bar_width - filled)
+        #$XBH_AI_PATCH_END
         name = os.path.basename(self.filepath)[:15]
-        
-        sys.stdout.write(f"\r[{bar}] {self.last_percent}% {downloaded_str}/{total_str} {speed_str} {name}")
-        sys.stdout.flush()
+
+        #$XBH_AI_PATCH_START
+        # sys.stdout.write(f"\r[{bar}] {self.last_percent}% {downloaded_str}/{total_str} {speed_str} {name}")
+        # sys.stdout.flush()
+        #$XBH_AI_PATCH_MODIFY
+        # 使用 print 替代 sys.stdout.write，确保刷新和换行
+        print(f"\r[{bar}] {self.last_percent}% {downloaded_str}/{total_str} {speed_str} {name}", end='', flush=True)
+        #$XBH_AI_PATCH_END
     
     def download_chunk(self, start_pos, end_pos):
         try:

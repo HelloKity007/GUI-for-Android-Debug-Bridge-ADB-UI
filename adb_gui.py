@@ -31,6 +31,16 @@ logging.basicConfig(
 logger = logging.getLogger("adb_gui")
 logger.info(f"日志文件: {_log_file}")
 
+# 全局异常捕获 - 防止未处理异常导致静默崩溃
+import traceback
+def _global_exception_handler(exc_type, exc_value, exc_tb):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_tb)
+        return
+    logger.critical("未处理的异常:", exc_info=(exc_type, exc_value, exc_tb))
+    logger.critical(traceback.format_exception(exc_type, exc_value, exc_tb))
+sys.excepthook = _global_exception_handler
+
 from datetime import datetime
 
 from PySide6.QtWidgets import (
@@ -177,7 +187,7 @@ from ui import ThemeManager, MarkdownRenderer
 from dialogs import (
     FileManagerDialog, AppManagerDialog, TestScriptsDialog,
     ClusterControlDialog, JadxDecompilerDialog, PluginManagerDialog,
-    GPIOControlDialog
+    GPIOControlDialog, FirmwareUpgradeDialog
 )
 
 # Import plugin system
@@ -417,7 +427,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.3.4"
+    APP_VERSION = "2.3.5.16"
 
     def __init__(self):
         super().__init__()
@@ -2578,6 +2588,7 @@ class ADBGUI(QMainWindow):
             'adb_root_remount': self.adb_root_remount,
             'show_test_scripts': self.show_test_scripts,
             'show_gpio_control': self.show_gpio_control,
+            'show_firmware_upgrade': self.show_firmware_upgrade,
             'show_jadx_decompiler': self.show_jadx_decompiler,
             'quick_enable_dev_options': self.quick_enable_dev_options,
             'quick_disable_dev_options': self.quick_disable_dev_options,
@@ -3200,6 +3211,27 @@ class ADBGUI(QMainWindow):
         """同步GPIO Control窗口的设备信息"""
         if hasattr(self, '_gpio_dialog') and self._gpio_dialog is not None:
             self._gpio_dialog.update_device(self.current_device)
+        # 同步固件升级窗口的设备信息
+        self._sync_firmware_upgrade_dialog_device()
+
+    def show_firmware_upgrade(self):
+        """Show firmware upgrade dialog (non-modal, independent window)"""
+        if not hasattr(self, '_firmware_upgrade_dialog') or self._firmware_upgrade_dialog is None:
+            self._firmware_upgrade_dialog = FirmwareUpgradeDialog(None, self.adb, self.current_device, self.colors)
+            self._firmware_upgrade_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+            self._firmware_upgrade_dialog.destroyed.connect(lambda: setattr(self, '_firmware_upgrade_dialog', None))
+            # 创建后立即同步当前设备
+            if self.current_device:
+                self._firmware_upgrade_dialog.update_device(self.current_device)
+
+        self._firmware_upgrade_dialog.show()
+        self._firmware_upgrade_dialog.raise_()
+        self._firmware_upgrade_dialog.activateWindow()
+
+    def _sync_firmware_upgrade_dialog_device(self):
+        """同步固件升级窗口的设备信息"""
+        if hasattr(self, '_firmware_upgrade_dialog') and self._firmware_upgrade_dialog is not None:
+            self._firmware_upgrade_dialog.update_device(self.current_device)
 
     def show_cluster_control(self):
         """Show cluster control for multi-device management"""

@@ -132,7 +132,7 @@ class GPIOCalculator:
                 name = GPIOCalculator.number_to_name(number, platform)
                 if name is None:
                     return None, None, "无法转换为GPIO名称"
-                return number, platform, None
+                return name, platform, None
             except ValueError:
                 return None, None, "请输入有效的数字"
 
@@ -464,12 +464,12 @@ class GPIOControlDialog(QDialog):
             return
 
         platform = self.get_platform_hint()
-        number, _, error = GPIOCalculator.convert(num_str, "number", platform)
+        name, _, error = GPIOCalculator.convert(num_str, "number", platform)
 
         if error:
             self.calc_num_result.setText(f"→ {error}")
         else:
-            self.calc_num_result.setText(f"→ {number}")
+            self.calc_num_result.setText(f"→ {name}")
 
     def copy_preview_command(self):
         """复制命令预览内容到剪贴板"""
