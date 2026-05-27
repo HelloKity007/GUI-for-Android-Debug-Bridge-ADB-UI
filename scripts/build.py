@@ -141,6 +141,8 @@ class Builder:
         cmd.extend(["--add-data", f"screenshots{os.pathsep}screenshots"])
         # logs 目录（空目录）
         cmd.extend(["--add-data", f"logs{os.pathsep}logs"])
+        # config 目录
+        cmd.extend(["--add-data", f"config{os.pathsep}config"])
         # config.json
         cmd.extend(["--add-data", f"config.json{os.pathsep}."])
         # buttons_cmd.json

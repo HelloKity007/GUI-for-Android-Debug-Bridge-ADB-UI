@@ -3216,17 +3216,24 @@ class ADBGUI(QMainWindow):
 
     def show_firmware_upgrade(self):
         """Show firmware upgrade dialog (non-modal, independent window)"""
-        if not hasattr(self, '_firmware_upgrade_dialog') or self._firmware_upgrade_dialog is None:
-            self._firmware_upgrade_dialog = FirmwareUpgradeDialog(None, self.adb, self.current_device, self.colors)
-            self._firmware_upgrade_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
-            self._firmware_upgrade_dialog.destroyed.connect(lambda: setattr(self, '_firmware_upgrade_dialog', None))
-            # 创建后立即同步当前设备
-            if self.current_device:
-                self._firmware_upgrade_dialog.update_device(self.current_device)
+        try:
+            logger.info("打开固件升级对话框...")
+            if not hasattr(self, '_firmware_upgrade_dialog') or self._firmware_upgrade_dialog is None:
+                logger.info("创建 FirmwareUpgradeDialog 实例...")
+                self._firmware_upgrade_dialog = FirmwareUpgradeDialog(None, self.adb, self.current_device, self.colors)
+                self._firmware_upgrade_dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+                self._firmware_upgrade_dialog.destroyed.connect(lambda: setattr(self, '_firmware_upgrade_dialog', None))
+                # 创建后立即同步当前设备
+                if self.current_device:
+                    self._firmware_upgrade_dialog.update_device(self.current_device)
+                logger.info("固件升级对话框创建成功")
 
-        self._firmware_upgrade_dialog.show()
-        self._firmware_upgrade_dialog.raise_()
-        self._firmware_upgrade_dialog.activateWindow()
+            self._firmware_upgrade_dialog.show()
+            self._firmware_upgrade_dialog.raise_()
+            self._firmware_upgrade_dialog.activateWindow()
+        except Exception as e:
+            logger.error(f"打开固件升级对话框异常: {e}", exc_info=True)
+            QMessageBox.critical(self, "错误", f"打开固件升级对话框失败: {str(e)}")
 
     def _sync_firmware_upgrade_dialog_device(self):
         """同步固件升级窗口的设备信息"""

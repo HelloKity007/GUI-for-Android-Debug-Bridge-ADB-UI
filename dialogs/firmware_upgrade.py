@@ -847,94 +847,109 @@ class FirmwareUpgradeDialog(QDialog):
 
     def _flash_only(self):
         """仅烧录"""
-        partitions = self._get_enabled_partitions()
-        if not partitions:
-            QMessageBox.warning(self, "警告", "请至少勾选一个分区")
-            return
-
-        upgrade_tool = os.path.join(self.project_dir, self.config.get('upgrade_tool_path', ''))
-        if not os.path.exists(upgrade_tool):
-            QMessageBox.critical(self, "错误", f"找不到升级工具: {upgrade_tool}")
-            return
-
-        download_dir = self.download_path_input.text().strip()
-        if not download_dir:
-            QMessageBox.warning(self, "警告", "请设置下载路径")
-            return
-
-        location_id = self._get_selected_location_id()
-
-        self.log_signal.emit("=" * 40)
-        self.log_signal.emit("开始烧录...")
-        self._set_operation_running(True)
-
-        # 检查升级设备是否已存在，不存在则尝试 reboot loader
-        if not location_id:
-            if self.device_id:
-                self.log_signal.emit(f"未检测到升级设备，发送 reboot loader 到设备 {self.device_id}...")
-                # 异步执行 reboot loader
-                threading.Thread(target=self._reboot_loader_and_flash,
-                                 args=(upgrade_tool, partitions, download_dir),
-                                 daemon=True).start()
+        try:
+            logger.info("[烧录] _flash_only 开始执行")
+            partitions = self._get_enabled_partitions()
+            if not partitions:
+                QMessageBox.warning(self, "警告", "请至少勾选一个分区")
                 return
-            else:
-                self.log_signal.emit("警告: 未连接ADB设备且未检测到升级设备")
-        else:
-            self.log_signal.emit(f"已检测到升级设备 LocationID={location_id}")
 
-        self._start_flash_thread(upgrade_tool, partitions, download_dir, location_id)
+            upgrade_tool = os.path.join(self.project_dir, self.config.get('upgrade_tool_path', ''))
+            if not os.path.exists(upgrade_tool):
+                QMessageBox.critical(self, "错误", f"找不到升级工具: {upgrade_tool}")
+                return
+
+            download_dir = self.download_path_input.text().strip()
+            if not download_dir:
+                QMessageBox.warning(self, "警告", "请设置下载路径")
+                return
+
+            location_id = self._get_selected_location_id()
+            logger.info(f"[烧录] location_id={location_id}, device_id={self.device_id}")
+
+            self.log_signal.emit("=" * 40)
+            self.log_signal.emit("开始烧录...")
+            self._set_operation_running(True)
+
+            # 检查升级设备是否已存在，不存在则尝试 reboot loader
+            if not location_id:
+                if self.device_id:
+                    self.log_signal.emit(f"未检测到升级设备，发送 reboot loader 到设备 {self.device_id}...")
+                    # 异步执行 reboot loader
+                    threading.Thread(target=self._reboot_loader_and_flash,
+                                     args=(upgrade_tool, partitions, download_dir),
+                                     daemon=True).start()
+                    return
+                else:
+                    self.log_signal.emit("警告: 未连接ADB设备且未检测到升级设备")
+            else:
+                self.log_signal.emit(f"已检测到升级设备 LocationID={location_id}")
+
+            self._start_flash_thread(upgrade_tool, partitions, download_dir, location_id)
+        except Exception as e:
+            tb = traceback.format_exc()
+            logger.error(f"[烧录] _flash_only 异常: {e}\n{tb}")
+            self.log_signal.emit(f"[烧录] 异常: {str(e)}\n{tb}")
+            self._set_operation_running(False)
 
     def _download_and_flash(self):
         """下载+烧录"""
-        # 收集任务ID
-        task_ids = []
-        for inp in self.task_id_inputs:
-            text = inp.text().strip()
-            if text:
-                task_ids.append(text)
-
-        if not task_ids:
-            QMessageBox.warning(self, "警告", "请至少输入一个任务ID")
-            return
-
-        partitions = self._get_enabled_partitions()
-        if not partitions:
-            QMessageBox.warning(self, "警告", "请至少勾选一个分区")
-            return
-
-        upgrade_tool = os.path.join(self.project_dir, self.config.get('upgrade_tool_path', ''))
-        if not os.path.exists(upgrade_tool):
-            QMessageBox.critical(self, "错误", f"找不到升级工具: {upgrade_tool}")
-            return
-
-        download_dir = self.download_path_input.text().strip()
-        if not download_dir:
-            QMessageBox.warning(self, "警告", "请设置下载路径")
-            return
-
-        # 保存配置
-        self._save_partition_config()
-
-        self.log_signal.emit("=" * 40)
-        self.log_signal.emit("开始下载+烧录流程...")
-        self._set_operation_running(True)
-
-        # 在主线程中获取UI值，避免跨线程访问Qt控件
-        location_id = self._get_selected_location_id()
-        device_id = self.device_id
-        server = self.server_combo.currentText()
-        threads = int(self.threads_combo.currentText())
-
-        # 异步执行整个流程
-        self.log_signal.emit("[调试] 准备启动后台线程...")
         try:
-            t = threading.Thread(target=self._download_and_flash_worker,
-                                 args=(task_ids, upgrade_tool, partitions, download_dir, location_id, device_id, server, threads),
-                                 daemon=True)
-            t.start()
-            self.log_signal.emit(f"[调试] 后台线程已启动, tid={t.ident}")
+            logger.info("[下载+烧录] _download_and_flash 开始执行")
+            # 收集任务ID
+            task_ids = []
+            for inp in self.task_id_inputs:
+                text = inp.text().strip()
+                if text:
+                    task_ids.append(text)
+
+            if not task_ids:
+                QMessageBox.warning(self, "警告", "请至少输入一个任务ID")
+                return
+
+            partitions = self._get_enabled_partitions()
+            if not partitions:
+                QMessageBox.warning(self, "警告", "请至少勾选一个分区")
+                return
+
+            upgrade_tool = os.path.join(self.project_dir, self.config.get('upgrade_tool_path', ''))
+            if not os.path.exists(upgrade_tool):
+                QMessageBox.critical(self, "错误", f"找不到升级工具: {upgrade_tool}")
+                return
+
+            download_dir = self.download_path_input.text().strip()
+            if not download_dir:
+                QMessageBox.warning(self, "警告", "请设置下载路径")
+                return
+
+            # 保存配置
+            self._save_partition_config()
+
+            self.log_signal.emit("=" * 40)
+            self.log_signal.emit("开始下载+烧录流程...")
+            self._set_operation_running(True)
+
+            # 在主线程中获取UI值，避免跨线程访问Qt控件
+            location_id = self._get_selected_location_id()
+            device_id = self.device_id
+            server = self.server_combo.currentText()
+            threads = int(self.threads_combo.currentText())
+
+            # 异步执行整个流程
+            self.log_signal.emit("[调试] 准备启动后台线程...")
+            try:
+                t = threading.Thread(target=self._download_and_flash_worker,
+                                     args=(task_ids, upgrade_tool, partitions, download_dir, location_id, device_id, server, threads),
+                                     daemon=True)
+                t.start()
+                self.log_signal.emit(f"[调试] 后台线程已启动, tid={t.ident}")
+            except Exception as e:
+                self.log_signal.emit(f"[调试] 启动线程异常: {str(e)}")
+                self._set_operation_running(False)
         except Exception as e:
-            self.log_signal.emit(f"[调试] 启动线程异常: {str(e)}")
+            tb = traceback.format_exc()
+            logger.error(f"[下载+烧录] _download_and_flash 异常: {e}\n{tb}")
+            self.log_signal.emit(f"[下载+烧录] 异常: {str(e)}\n{tb}")
             self._set_operation_running(False)
 
     def _reboot_loader_and_flash(self, upgrade_tool, partitions, download_dir):
@@ -1055,19 +1070,27 @@ class FirmwareUpgradeDialog(QDialog):
 
     def _start_flash_thread(self, upgrade_tool, partitions, download_dir, location_id=None):
         """启动烧录线程"""
-        self._flash_thread = QThread()
-        self._flash_worker = FlashWorker(upgrade_tool, partitions, download_dir, location_id)
-        self._flash_worker.moveToThread(self._flash_thread)
+        try:
+            logger.info(f"[烧录] _start_flash_thread 开始, location_id={location_id}")
+            self._flash_thread = QThread()
+            self._flash_worker = FlashWorker(upgrade_tool, partitions, download_dir, location_id)
+            self._flash_worker.moveToThread(self._flash_thread)
 
-        self._flash_thread.started.connect(self._flash_worker.run)
-        self._flash_worker.progress.connect(lambda msg: self.log_signal.emit(f"[烧录] {msg}"))
-        self._flash_worker.finished.connect(self._on_flash_finished)
+            self._flash_thread.started.connect(self._flash_worker.run)
+            self._flash_worker.progress.connect(lambda msg: self.log_signal.emit(f"[烧录] {msg}"))
+            self._flash_worker.finished.connect(self._on_flash_finished)
 
-        self._flash_worker.finished.connect(self._flash_thread.quit)
-        self._flash_worker.finished.connect(self._flash_worker.deleteLater)
-        self._flash_thread.finished.connect(self._flash_thread.deleteLater)
+            self._flash_worker.finished.connect(self._flash_thread.quit)
+            self._flash_worker.finished.connect(self._flash_worker.deleteLater)
+            self._flash_thread.finished.connect(self._flash_thread.deleteLater)
 
-        self._flash_thread.start()
+            self._flash_thread.start()
+            logger.info("[烧录] 烧录线程已启动")
+        except Exception as e:
+            tb = traceback.format_exc()
+            logger.error(f"[烧录] _start_flash_thread 异常: {e}\n{tb}")
+            self.log_signal.emit(f"[烧录] 启动线程异常: {str(e)}\n{tb}")
+            self._set_operation_running(False)
 
     def _on_flash_finished(self, success, message):
         """烧录完成回调"""
