@@ -209,6 +209,7 @@ class FlashWorker(QObject):
     def run(self):
         """执行烧录"""
         try:
+            logger.info("[FlashWorker] run 开始执行")
             # 等待设备就绪
             self.progress.emit("检查设备连接...")
             if not self._wait_for_device():
@@ -278,6 +279,7 @@ class FlashWorker(QObject):
 
         except Exception as e:
             tb = traceback.format_exc()
+            logger.error(f"[FlashWorker] run 异常: {e}\n{tb}")
             self.progress.emit(f"[异常详情] {tb}")
             self.finished.emit(False, f"烧录异常: {str(e)}")
 
@@ -344,6 +346,8 @@ class FlashWorker(QObject):
             if self.device_location_id:
                 cmd = [self.upgrade_tool_path, '-s', str(self.device_location_id)] + args
 
+            logger.debug(f"[FlashWorker] 执行命令: {cmd}")
+
             if capture:
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
                 output = result.stdout + result.stderr
@@ -359,11 +363,14 @@ class FlashWorker(QObject):
                     self.progress.emit(output.strip())
                 return result.returncode == 0, output.strip()
         except subprocess.TimeoutExpired:
+            logger.warning(f"[FlashWorker] 命令超时: {cmd}")
             return False, "命令执行超时"
         except FileNotFoundError:
+            logger.error(f"[FlashWorker] 找不到升级工具: {self.upgrade_tool_path}")
             return False, f"找不到升级工具: {self.upgrade_tool_path}"
         except Exception as e:
             tb = traceback.format_exc()
+            logger.error(f"[FlashWorker] 命令异常: {e}\n{tb}")
             self.progress.emit(f"[异常详情] {tb}")
             return False, str(e)
 
@@ -1072,6 +1079,10 @@ class FirmwareUpgradeDialog(QDialog):
         """启动烧录线程"""
         try:
             logger.info(f"[烧录] _start_flash_thread 开始, location_id={location_id}")
+
+            # 清理旧的烧录线程
+            self._cleanup_flash_thread()
+
             self._flash_thread = QThread()
             self._flash_worker = FlashWorker(upgrade_tool, partitions, download_dir, location_id)
             self._flash_worker.moveToThread(self._flash_thread)
@@ -1091,6 +1102,22 @@ class FirmwareUpgradeDialog(QDialog):
             logger.error(f"[烧录] _start_flash_thread 异常: {e}\n{tb}")
             self.log_signal.emit(f"[烧录] 启动线程异常: {str(e)}\n{tb}")
             self._set_operation_running(False)
+
+    def _cleanup_flash_thread(self):
+        """清理旧的烧录线程"""
+        try:
+            if hasattr(self, '_flash_worker') and self._flash_worker:
+                logger.info("[烧录] 清理旧的烧录 worker")
+                self._flash_worker.cancel()
+                self._flash_worker = None
+            if hasattr(self, '_flash_thread') and self._flash_thread:
+                if self._flash_thread.isRunning():
+                    logger.info("[烧录] 停止旧的烧录线程")
+                    self._flash_thread.quit()
+                    self._flash_thread.wait(1000)
+                self._flash_thread = None
+        except Exception as e:
+            logger.warning(f"[烧录] 清理线程异常: {e}")
 
     def _on_flash_finished(self, success, message):
         """烧录完成回调"""
@@ -1142,15 +1169,9 @@ class FirmwareUpgradeDialog(QDialog):
         try:
             self.log_signal.emit("窗口关闭，停止后台线程...")
             self._stop_device_check()
-            # 等待烧录线程结束
-            if self._flash_thread and self._flash_thread.isRunning():
-                self.log_signal.emit("等待烧录线程结束...")
-                if self._flash_worker:
-                    self._flash_worker.cancel()
-                self._flash_thread.quit()
-                self._flash_thread.wait(3000)
+            self._cleanup_flash_thread()
             # 等待下载线程结束
-            if self._download_thread and self._download_thread.isRunning():
+            if hasattr(self, '_download_thread') and self._download_thread and self._download_thread.isRunning():
                 self.log_signal.emit("等待下载线程结束...")
                 if self._download_worker:
                     self._download_worker.cancel()
