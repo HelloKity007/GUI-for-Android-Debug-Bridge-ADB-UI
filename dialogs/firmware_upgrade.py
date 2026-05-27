@@ -982,7 +982,26 @@ class FirmwareUpgradeDialog(QDialog):
 
             # 步骤1: 检查升级设备，不存在则 reboot loader
             self.log_signal.emit("[流程] 步骤1: 检查升级设备...")
-            if not location_id:
+
+            # 先用 upgrade_tool LD 验证 LocationID 是否真实存在
+            real_location_id = None
+            if location_id:
+                self.log_signal.emit(f"[流程] 验证 LocationID={location_id} 是否存在...")
+                try:
+                    result = subprocess.run(
+                        [upgrade_tool, 'LD'],
+                        capture_output=True, text=True, timeout=5
+                    )
+                    output = (result.stdout + result.stderr).strip()
+                    if location_id in output:
+                        self.log_signal.emit(f"[流程] LocationID={location_id} 存在")
+                        real_location_id = location_id
+                    else:
+                        self.log_signal.emit(f"[流程] LocationID={location_id} 已不存在，需要重新进入 loader")
+                except Exception as e:
+                    self.log_signal.emit(f"[流程] 验证设备异常: {str(e)}")
+
+            if not real_location_id:
                 if device_id:
                     self.log_signal.emit(f"[流程] 未检测到升级设备，发送 reboot loader 到设备 {device_id}...")
                     try:
@@ -996,7 +1015,7 @@ class FirmwareUpgradeDialog(QDialog):
                 else:
                     self.log_signal.emit("[流程] 警告: 未连接ADB设备且未检测到升级设备")
             else:
-                self.log_signal.emit(f"[流程] 已检测到升级设备 LocationID={location_id}，跳过 reboot loader")
+                self.log_signal.emit(f"[流程] 已验证升级设备 LocationID={real_location_id}")
 
             # 步骤2: 下载（同步等待完成）
             self.log_signal.emit("[流程] 步骤2: 开始下载...")
@@ -1009,7 +1028,7 @@ class FirmwareUpgradeDialog(QDialog):
 
             # 步骤3: 烧录
             self.log_signal.emit("[流程] 步骤3: 开始烧录...")
-            self._start_flash_thread(upgrade_tool, partitions, download_dir, location_id)
+            self._start_flash_thread(upgrade_tool, partitions, download_dir, real_location_id)
 
         except Exception as e:
             tb = traceback.format_exc()
