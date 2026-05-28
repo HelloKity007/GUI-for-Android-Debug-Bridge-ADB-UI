@@ -9,7 +9,7 @@
         {
             "enabled": true,
             "name": "Full Image",
-            "image": "update_VBO.img",
+            "image": "update_LVDS.img",
             "is_full_image": true
         },
         {

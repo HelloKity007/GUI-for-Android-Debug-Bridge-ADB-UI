@@ -1,3 +1,74 @@
+v2.55 revision(2025/09/28)
+1.add close_read_capability setting
+
+v2.54 revision(2025/09/24)
+1.add "wvd" and "rvd" commands
+2.delete "rsn" and "sn" commands
+
+
+v2.53 revision(2025/08/15)
+1.fix forget to do rc4 before 471 and 472
+
+v2.52 revision(2025/07/23)
+1."ufx" function done
+
+v2.51 revision(2025/07/14)
+1.add "ERPC" function
+
+v2.50 revision(2025/06/03)
+1."RRAM" "WRAM" "ERAM" support 64bit addr
+2. add "TRPC" "RRPC" "WRPC" commands
+
+v2.48 revision(2025/04/29)
+1.add read and write repaircode commands
+2.fix skip check on download boot step bug
+
+v2.47 revision(2025/03/26)
+1.add “RRAM" "WRAM" "ERAM" "471" "472" commands
+
+v2.46 revision(2025/03/18)
+1.add rkusb_timeout setting
+
+v2.45 revision(2025/01/13)
+1.fix same serial no for usbplug device bug in windows
+
+v2.44 revision(2024/12/24)
+1.change name from vdk into rvd
+
+v2.44 revision(2024/12/02)
+1.fix the second idblock for nor bug
+
+v2.43 revision(2024/11/12)
+1.switch storage support ufs and vdk
+
+v2.42 revision(2024/10/23)
+1.fix switch storage into ufs bug
+
+v2.41 revision(2024/09/02)
+1.add cpu command to read cpu id
+
+v2.40 revision(2024/08/22)
+1.support erase idblock for ufs
+
+v2.39 revision(2024/08/06)
+1.delete backup gpt protect from wl 
+
+v2.38 revision(2024/07/19)
+1.delete usb3_transfer check when using 4m usb transfer
+
+v2.37 revision(2024/07/04)
+1.fix dhara image download bug
+
+v2.36 revision(2024/06/14)
+1.add check partition for download gpt
+2.add dhara image support 
+
+v2.35 revision(2024/06/11)
+1.fix "ul" command do not skip download boot at usbplug state
+
+v2.34 revision(2024/06/04)
+1.add partition size check for writing lba
+
 v2.33 revision(2024/05/08)
 1.support to switch storage in loader mode
 
