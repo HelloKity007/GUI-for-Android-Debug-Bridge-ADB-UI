@@ -357,7 +357,7 @@ class FlashWorker(QObject):
                 tool_name = os.path.basename(self.upgrade_tool_path)
                 log_cmd = [tool_name] + cmd[1:]
                 self.progress.emit(f"执行: {' '.join(log_cmd)}")
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
                 output = result.stdout + result.stderr
                 if output.strip():
                     self.progress.emit(output.strip())
