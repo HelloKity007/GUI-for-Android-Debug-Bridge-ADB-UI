@@ -426,28 +426,11 @@ class ADBGUI(QMainWindow):
     app_list_ready = pyqtSignal(list)
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
-    # 版本号 - 从配置文件读取
-    @staticmethod
-    def _get_app_version():
-        """从配置文件读取版本号"""
-        try:
-            version_file = Path(__file__).parent / "scripts" / "config.json"
-            build_info_file = Path(__file__).parent / "scripts" / "build_info.json"
-            version = "2.3.0"
-            build = "0"
-            if version_file.exists():
-                with open(version_file, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                    version = config.get('app', {}).get('version', '2.3.0')
-            if build_info_file.exists():
-                with open(build_info_file, 'r', encoding='utf-8') as f:
-                    build_info = json.load(f)
-                    build = str(build_info.get('build_number', '0'))
-            return f"{version}.{build}"
-        except Exception:
-            return "2.3.0.0"
-
-    APP_VERSION = _get_app_version.__func__()
+    # 版本号 - 从 version_info.py 读取
+    try:
+        from version_info import FULL_VERSION as APP_VERSION
+    except ImportError:
+        APP_VERSION = "2.3.0.0"
 
     def __init__(self):
         super().__init__()
