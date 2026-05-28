@@ -476,8 +476,8 @@ class FirmwareUpgradeDialog(QDialog):
         self._load_config_to_ui()
         self.log_signal.connect(self.append_log)
 
-        # 自动启动设备检测
-        self._start_device_check()
+        # 不再自动启动设备检测，由用户手动启动
+        # self._start_device_check()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
