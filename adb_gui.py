@@ -427,7 +427,7 @@ class ADBGUI(QMainWindow):
     device_info_updated = pyqtSignal(str, dict)  # 设备信息更新信号
 
     # 版本号
-    APP_VERSION = "2.3.5.16"
+    APP_VERSION = "2.3.5.22"
 
     def __init__(self):
         super().__init__()
