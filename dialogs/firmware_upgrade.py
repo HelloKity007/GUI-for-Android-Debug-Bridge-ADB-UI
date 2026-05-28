@@ -357,11 +357,26 @@ class FlashWorker(QObject):
                 tool_name = os.path.basename(self.upgrade_tool_path)
                 log_cmd = [tool_name] + cmd[1:]
                 self.progress.emit(f"执行: {' '.join(log_cmd)}")
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-                output = result.stdout + result.stderr
-                if output.strip():
-                    self.progress.emit(output.strip())
-                return result.returncode == 0, output.strip()
+
+                # 实时读取输出
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1
+                )
+                output_lines = []
+                for line in process.stdout:
+                    if self._cancelled:
+                        process.terminate()
+                        return False, "已取消"
+                    line = line.strip()
+                    if line:
+                        output_lines.append(line)
+                        self.progress.emit(line)
+                process.wait(timeout=600)
+                return process.returncode == 0, '\n'.join(output_lines)
         except subprocess.TimeoutExpired:
             logger.warning(f"[FlashWorker] 命令超时: {cmd}")
             return False, "命令执行超时"
