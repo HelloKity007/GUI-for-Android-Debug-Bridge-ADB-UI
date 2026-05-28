@@ -37,7 +37,7 @@ DEFAULT_CONFIG = {
         "server": "auto",
         "threads": 8
     },
-    "upgrade_tool_path": "extensions/upgrade_tool_v2.33_for_window/upgrade_tool.exe",
+    "upgrade_tool_path": "extensions/upgrade_tool_v2.56_for_window/upgrade_tool.exe",
     "partitions": [
         {"enabled": True, "name": "Full Image", "image": "update.img", "is_full_image": True},
         {"enabled": False, "name": "uboot", "image": "uboot.img", "is_full_image": False},

@@ -4,12 +4,12 @@
         "server": "auto",
         "threads": 8
     },
-    "upgrade_tool_path": "extensions/upgrade_tool_v2.33_for_window/upgrade_tool.exe",
+    "upgrade_tool_path": "extensions/upgrade_tool_v2.56_for_window/upgrade_tool.exe",
     "partitions": [
         {
-            "enabled": false,
+            "enabled": true,
             "name": "Full Image",
-            "image": "update.img",
+            "image": "update_VBO.img",
             "is_full_image": true
         },
         {
@@ -19,7 +19,7 @@
             "is_full_image": false
         },
         {
-            "enabled": true,
+            "enabled": false,
             "name": "boot",
             "image": "boot.img",
             "is_full_image": false
