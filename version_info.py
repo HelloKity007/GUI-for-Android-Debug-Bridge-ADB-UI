@@ -4,5 +4,5 @@
 """
 # 主版本号.次版本号.修订号.构建号
 VERSION = "2.3.5"
-BUILD_NUMBER = 28
+BUILD_NUMBER = 29
 FULL_VERSION = f"{VERSION}.{BUILD_NUMBER}"

@@ -2163,6 +2163,9 @@ class ADBGUI(QMainWindow):
             # Reconnect signal after all combo box operations are complete
             self.device_combo.currentTextChanged.connect(self.on_device_selected)
 
+            # 同步固件升级对话框
+            self._sync_gpio_dialog_device()
+
             if not silent or devices_changed:
                 self.update_status(f"Found {len(devices)} device(s)")
                 if devices_changed:
@@ -2178,6 +2181,8 @@ class ADBGUI(QMainWindow):
             self.device_detail_label.setText("")
             self.device_android_label.setText("")
             self._clear_device_extended_info()
+            # 同步固件升级对话框
+            self._sync_gpio_dialog_device()
             if not silent or had_devices:
                 self.update_status("No devices found")
                 if had_devices:
