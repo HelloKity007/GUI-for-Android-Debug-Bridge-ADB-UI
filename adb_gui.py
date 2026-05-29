@@ -7878,6 +7878,24 @@ class ADBGUI(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
+
+    # 设置应用图标（任务栏图标）
+    from PySide6.QtGui import QIcon, QPixmap, QPainter, QBrush, QPen, QFont
+    from PySide6.QtCore import Qt
+    pixmap = QPixmap(64, 64)
+    pixmap.fill(QColor(0, 0, 0, 0))
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setBrush(QBrush(QColor('#0078d4')))
+    painter.setPen(QPen(QColor('#005a9e'), 2))
+    painter.drawEllipse(4, 4, 56, 56)
+    painter.setPen(QPen(QColor('#ffffff')))
+    font = QFont('Arial', 16, QFont.Weight.Bold)
+    painter.setFont(font)
+    painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, 'ADB')
+    painter.end()
+    app.setWindowIcon(QIcon(pixmap))
+
     configure_application_fonts(app)
     window = ADBGUI()
     window.show()
