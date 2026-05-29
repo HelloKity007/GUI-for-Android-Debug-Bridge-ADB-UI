@@ -440,12 +440,14 @@ class DeviceChecker(QObject):
                     devices.append((location_id, line))
 
             self.devices_found.emit(devices)
+            logger.debug(f"[设备检测] 发现 {len(devices)} 个设备")
 
             # 检测设备变化，仅在设备数量或ID变化时触发
             current_ids = sorted([d[0] for d in devices])
             if current_ids != self._last_device_ids:
                 self._last_device_ids = current_ids
                 self.devices_changed.emit(devices)
+                logger.debug(f"[设备检测] 设备变化: {current_ids}")
 
         except subprocess.TimeoutExpired:
             pass  # 超时忽略，下次再检查
@@ -782,23 +784,26 @@ class FirmwareUpgradeDialog(QDialog):
 
     def _on_devices_found(self, devices):
         """设备列表更新回调（仅更新UI，不打印日志）"""
-        self.device_list_widget.clear()
-        if not devices:
-            self.device_list_widget.setPlainText("未检测到升级设备")
-            self.detect_status_label.setText("检测: 运行中... 未发现设备")
-            self.detect_status_label.setStyleSheet("color: #FF9800;")
-            return
+        try:
+            self.device_list_widget.clear()
+            if not devices:
+                self.device_list_widget.setPlainText("未检测到升级设备")
+                self.detect_status_label.setText("检测: 运行中... 未发现设备")
+                self.detect_status_label.setStyleSheet("color: #FF9800;")
+                return
 
-        self.detect_status_label.setText(f"检测: 运行中... 发现 {len(devices)} 个设备")
-        self.detect_status_label.setStyleSheet("color: #4CAF50;")
+            self.detect_status_label.setText(f"检测: 运行中... 发现 {len(devices)} 个设备")
+            self.detect_status_label.setStyleSheet("color: #4CAF50;")
 
-        # 显示设备列表
-        for location_id, desc in devices:
-            self.device_list_widget.append(f"📍 {desc}")
+            # 显示设备列表
+            for location_id, desc in devices:
+                self.device_list_widget.append(f"📍 {desc}")
 
-        # 自动选择逻辑
-        if len(devices) == 1:
-            self.selected_location_id_input.setText(devices[0][0])
+            # 自动选择逻辑
+            if len(devices) == 1:
+                self.selected_location_id_input.setText(devices[0][0])
+        except Exception as e:
+            logger.error(f"[设备检测] _on_devices_found 异常: {e}")
 
     def _on_devices_changed(self, devices):
         """设备变化时打印日志（仅在数量或ID变化时触发）"""
