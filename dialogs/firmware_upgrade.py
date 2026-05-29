@@ -748,8 +748,6 @@ class FirmwareUpgradeDialog(QDialog):
             self.log_signal.emit(f"下载路径已更新: {directory}")
 
     def _start_device_check(self):
-
-    def _start_device_check(self):
         """启动后台设备检测"""
         upgrade_tool = os.path.join(self.project_dir, self.config.get('upgrade_tool_path', ''))
         if not os.path.exists(upgrade_tool):
