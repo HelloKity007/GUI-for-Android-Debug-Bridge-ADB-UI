@@ -409,7 +409,7 @@ class DeviceChecker(QObject):
         self._running = True
         while self._running:
             self._check_devices()
-            time.sleep(1)
+            time.sleep(1.5)
 
     def stop(self):
         """停止检测"""
@@ -491,8 +491,8 @@ class FirmwareUpgradeDialog(QDialog):
         self._load_config_to_ui()
         self.log_signal.connect(self.append_log)
 
-        # 不再自动启动设备检测，由用户手动启动
-        # self._start_device_check()
+        # 自动启动设备检测
+        self._start_device_check()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -575,13 +575,20 @@ class FirmwareUpgradeDialog(QDialog):
 
             part_layout.addLayout(row)
 
-        # 保存配置按钮
-        save_btn_row = QHBoxLayout()
-        save_config_btn = QPushButton("💾 保存分区配置")
-        save_config_btn.clicked.connect(self._save_partition_config)
-        save_btn_row.addWidget(save_config_btn)
-        save_btn_row.addStretch()
-        part_layout.addLayout(save_btn_row)
+        # 自动保存定时器（延时2秒保存）
+        from PySide6.QtCore import QTimer
+        self._auto_save_timer = QTimer(self)
+        self._auto_save_timer.setSingleShot(True)
+        self._auto_save_timer.setInterval(2000)
+        self._auto_save_timer.timeout.connect(self._save_partition_config)
+
+        # 连接信号到自动保存
+        for cb in self.partition_checks:
+            cb.stateChanged.connect(self._trigger_auto_save)
+        for inp in self.partition_name_inputs:
+            inp.textChanged.connect(self._trigger_auto_save)
+        for inp in self.partition_image_inputs:
+            inp.textChanged.connect(self._trigger_auto_save)
 
         layout.addWidget(part_group)
 
@@ -633,16 +640,11 @@ class FirmwareUpgradeDialog(QDialog):
         detect_group = QGroupBox("🔍 升级设备检测 (Loader/Maskrom)")
         detect_layout = QVBoxLayout(detect_group)
 
-        # 检测状态和控制
+        # 检测状态（只显示状态，无按钮）
         detect_ctrl_row = QHBoxLayout()
-        self.detect_status_label = QLabel("检测: 未启动")
-        self.detect_status_label.setStyleSheet("color: #9E9E9E;")
+        self.detect_status_label = QLabel("检测: 启动中...")
+        self.detect_status_label.setStyleSheet("color: #4CAF50;")
         detect_ctrl_row.addWidget(self.detect_status_label)
-
-        self.detect_btn = QPushButton("▶ 启动检测")
-        self.detect_btn.setFixedWidth(100)
-        self.detect_btn.clicked.connect(self._toggle_device_check)
-        detect_ctrl_row.addWidget(self.detect_btn)
         detect_ctrl_row.addStretch()
         detect_layout.addLayout(detect_ctrl_row)
 
@@ -707,6 +709,10 @@ class FirmwareUpgradeDialog(QDialog):
             self.partition_name_inputs[i].setText(p.get('name', ''))
             self.partition_image_inputs[i].setText(p.get('image', ''))
 
+    def _trigger_auto_save(self):
+        """触发自动保存（延时2秒）"""
+        self._auto_save_timer.start()
+
     def _save_partition_config(self):
         """保存分区配置"""
         self.config['download'] = {
@@ -741,12 +747,7 @@ class FirmwareUpgradeDialog(QDialog):
             save_config(self.config)
             self.log_signal.emit(f"下载路径已更新: {directory}")
 
-    def _toggle_device_check(self):
-        """切换设备检测状态"""
-        if self._device_checking:
-            self._stop_device_check()
-        else:
-            self._start_device_check()
+    def _start_device_check(self):
 
     def _start_device_check(self):
         """启动后台设备检测"""
@@ -756,7 +757,6 @@ class FirmwareUpgradeDialog(QDialog):
             return
 
         self._device_checking = True
-        self.detect_btn.setText("⏹ 停止检测")
         self.detect_status_label.setText("检测: 运行中...")
         self.detect_status_label.setStyleSheet("color: #4CAF50;")
 
@@ -779,7 +779,6 @@ class FirmwareUpgradeDialog(QDialog):
         if self._device_check_thread:
             self._device_check_thread.quit()
             self._device_check_thread.wait(2000)
-        self.detect_btn.setText("▶ 启动检测")
         self.detect_status_label.setText("检测: 已停止")
         self.detect_status_label.setStyleSheet("color: #9E9E9E;")
 
