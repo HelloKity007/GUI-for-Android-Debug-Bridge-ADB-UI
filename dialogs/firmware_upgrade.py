@@ -157,7 +157,8 @@ class DownloadWorker(QObject):
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                env=env
+                env=env,
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
 
             stdout, _ = process.communicate()
@@ -349,7 +350,8 @@ class FlashWorker(QObject):
             logger.debug(f"[FlashWorker] 执行命令: {cmd}")
 
             if capture:
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30,
+                                       creationflags=subprocess.CREATE_NO_WINDOW)
                 output = result.stdout + result.stderr
                 return result.returncode == 0, output.strip()
             else:
@@ -364,7 +366,8 @@ class FlashWorker(QObject):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
-                    bufsize=1
+                    bufsize=1,
+                    creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 output_lines = []
                 for line in process.stdout:
@@ -420,7 +423,8 @@ class DeviceChecker(QObject):
         try:
             result = subprocess.run(
                 [self.upgrade_tool_path, 'LD'],
-                capture_output=True, text=True, timeout=5
+                capture_output=True, text=True, timeout=5,
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
             output = (result.stdout + result.stderr).strip()
 
@@ -1007,7 +1011,8 @@ class FirmwareUpgradeDialog(QDialog):
                 try:
                     result = subprocess.run(
                         [upgrade_tool, 'LD'],
-                        capture_output=True, text=True, timeout=5
+                        capture_output=True, text=True, timeout=5,
+                        creationflags=subprocess.CREATE_NO_WINDOW
                     )
                     output = (result.stdout + result.stderr).strip()
                     if location_id in output:
@@ -1068,7 +1073,8 @@ class FirmwareUpgradeDialog(QDialog):
             try:
                 env = os.environ.copy()
                 env['PYTHONUNBUFFERED'] = '1'
-                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
+                                          creationflags=subprocess.CREATE_NO_WINDOW)
                 stdout, _ = process.communicate()
                 output = stdout.decode('utf-8', errors='replace')
                 for line in output.split('\n'):
