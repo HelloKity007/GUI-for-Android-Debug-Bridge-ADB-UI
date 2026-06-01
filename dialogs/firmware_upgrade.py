@@ -17,6 +17,65 @@ from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger("firmware_upgrade")
+
+
+def _get_python_exe():
+    """获取可用的 Python 解释器路径
+    EXE 打包环境下 sys.executable 指向 EXE 自身，需回退到系统 Python
+    """
+    # 非打包环境直接返回
+    if not getattr(sys, 'frozen', False):
+        return sys.executable
+
+    # 打包环境：查找系统 Python
+    # 1. 优先用 py launcher (Windows)
+    try:
+        result = subprocess.run(
+            ['py', '-3', '-c', 'import sys; print(sys.executable)'],
+            capture_output=True, text=True, timeout=5,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            python_path = result.stdout.strip()
+            if os.path.exists(python_path):
+                logger.info(f"[Python] 通过 py launcher 找到: {python_path}")
+                return python_path
+    except Exception:
+        pass
+
+    # 2. 从 PATH 查找 python/python3
+    for name in ['python', 'python3']:
+        try:
+            result = subprocess.run(
+                [name, '-c', 'import sys; print(sys.executable)'],
+                capture_output=True, text=True, timeout=5,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                python_path = result.stdout.strip()
+                if os.path.exists(python_path):
+                    logger.info(f"[Python] 通过 PATH 找到: {python_path}")
+                    return python_path
+        except Exception:
+            continue
+
+    # 3. 常见安装路径
+    common_paths = [
+        r'C:\Python313\python.exe',
+        r'C:\Python312\python.exe',
+        r'C:\Python311\python.exe',
+        r'C:\Python310\python.exe',
+        r'C:\Python39\python.exe',
+    ]
+    for p in common_paths:
+        if os.path.exists(p):
+            logger.info(f"[Python] 通过常见路径找到: {p}")
+            return p
+
+    logger.error("[Python] 找不到系统 Python 解释器")
+    return None
+
+
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QTextEdit, QMessageBox, QGroupBox, QLineEdit, QComboBox,
@@ -136,9 +195,14 @@ class DownloadWorker(QObject):
     def _download_task(self, task_id):
         """下载单个任务 - 调用download.py脚本"""
         try:
+            python_exe = _get_python_exe()
+            if not python_exe:
+                self.progress.emit("找不到 Python 解释器，无法执行下载")
+                return False
+
             # 构建命令: python download.py <task_id> -o <output_dir> -s <server> -t <threads>
             cmd = [
-                sys.executable,  # python
+                python_exe,
                 self.download_script,
                 task_id,
                 '-o', self.output_dir,
@@ -1064,12 +1128,17 @@ class FirmwareUpgradeDialog(QDialog):
             self.log_signal.emit(f"[下载] 脚本不存在: {download_script}")
             return False
 
+        python_exe = _get_python_exe()
+        if not python_exe:
+            self.log_signal.emit("[下载] 找不到 Python 解释器，无法执行下载")
+            return False
+
         for task_id in task_ids:
             task_id = task_id.strip()
             if not task_id:
                 continue
             self.log_signal.emit(f"[下载] 开始下载任务: {task_id}")
-            cmd = [sys.executable, download_script, task_id, '-o', output_dir, '-s', server, '-t', str(threads)]
+            cmd = [python_exe, download_script, task_id, '-o', output_dir, '-s', server, '-t', str(threads)]
             try:
                 env = os.environ.copy()
                 env['PYTHONUNBUFFERED'] = '1'
