@@ -7,7 +7,7 @@
     "upgrade_tool_path": "extensions/upgrade_tool_v2.56_for_window/upgrade_tool.exe",
     "partitions": [
         {
-            "enabled": true,
+            "enabled": false,
             "name": "Full Image",
             "image": "update_LVDS.img",
             "is_full_image": true
@@ -19,7 +19,7 @@
             "is_full_image": false
         },
         {
-            "enabled": false,
+            "enabled": true,
             "name": "boot",
             "image": "boot.img",
             "is_full_image": false
