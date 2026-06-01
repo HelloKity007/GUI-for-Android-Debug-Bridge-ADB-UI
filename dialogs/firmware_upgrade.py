@@ -1265,6 +1265,9 @@ class FirmwareUpgradeDialog(QDialog):
 
     def update_device(self, device_id):
         """更新设备ID（由主界面调用同步设备信息）"""
+        # 仅在设备变化时更新UI和打印日志
+        if device_id == self.device_id:
+            return
         self.device_id = device_id
         if device_id:
             self.device_label.setText(device_id)
