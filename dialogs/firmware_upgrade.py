@@ -19,6 +19,16 @@ from pathlib import Path
 logger = logging.getLogger("firmware_upgrade")
 
 
+def _hidden_startupinfo():
+    """创建隐藏窗口的 STARTUPINFO（用于 upgrade_tool 等控制台程序）
+    CREATE_NO_WINDOW 会剥夺控制台句柄导致无法输出，改用 STARTUPINFO 隐藏窗口
+    """
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = 0  # SW_HIDE
+    return si
+
+
 def _get_python_exe():
     """获取可用的 Python 解释器路径
     EXE 打包环境下 sys.executable 指向 EXE 自身，需回退到系统 Python
@@ -415,7 +425,7 @@ class FlashWorker(QObject):
 
             if capture:
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=30,
-                                       creationflags=subprocess.CREATE_NO_WINDOW)
+                                       startupinfo=_hidden_startupinfo())
                 output = result.stdout + result.stderr
                 return result.returncode == 0, output.strip()
             else:
@@ -431,7 +441,7 @@ class FlashWorker(QObject):
                     stderr=subprocess.STDOUT,
                     text=True,
                     bufsize=1,
-                    creationflags=subprocess.CREATE_NO_WINDOW
+                    startupinfo=_hidden_startupinfo()
                 )
                 output_lines = []
                 for line in process.stdout:
@@ -488,7 +498,7 @@ class DeviceChecker(QObject):
             result = subprocess.run(
                 [self.upgrade_tool_path, 'LD'],
                 capture_output=True, text=True, timeout=5,
-                creationflags=subprocess.CREATE_NO_WINDOW
+                startupinfo=_hidden_startupinfo()
             )
             output = (result.stdout + result.stderr).strip()
 
@@ -1076,7 +1086,7 @@ class FirmwareUpgradeDialog(QDialog):
                     result = subprocess.run(
                         [upgrade_tool, 'LD'],
                         capture_output=True, text=True, timeout=5,
-                        creationflags=subprocess.CREATE_NO_WINDOW
+                        startupinfo=_hidden_startupinfo()
                     )
                     output = (result.stdout + result.stderr).strip()
                     if location_id in output:
