@@ -341,6 +341,30 @@ class ReleaseManager:
 
         print(f"[信息] Release 索引已更新")
 
+    def _update_version_info_py(self, version_info: dict):
+        """
+        更新 version_info.py 文件（应用启动时读取）
+        :param version_info: 版本信息
+        """
+        version_info_file = self.project_dir / "version_info.py"
+
+        content = f'''# -*- coding: utf-8 -*-
+"""
+版本信息文件 - 统一管理应用版本号
+"""
+# 主版本号.次版本号.修订号.构建号
+VERSION = "{version_info['version']}"
+BUILD_NUMBER = {version_info['build']}
+FULL_VERSION = f"{{VERSION}}.{{BUILD_NUMBER}}"
+'''
+
+        try:
+            with open(version_info_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"[信息] version_info.py 已更新: v{version_info['full_version']}")
+        except Exception as e:
+            print(f"[警告] 更新 version_info.py 失败: {e}")
+
     def release(self, onefile: bool = False, console: bool = False, skip_build: bool = False, create_zip: bool = True) -> bool:
         """
         执行完整的发布流程
@@ -385,6 +409,9 @@ class ReleaseManager:
 
         # 步骤 6: 更新索引
         self.update_release_index(release_dir, version_info)
+
+        # 步骤 7: 更新 version_info.py（应用启动时读取）
+        self._update_version_info_py(version_info)
 
         print("\n" + "=" * 60)
         print("✅ 发布完成！")
