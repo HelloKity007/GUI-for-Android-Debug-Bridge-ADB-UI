@@ -21,7 +21,7 @@
         {
             "enabled": true,
             "name": "boot",
-            "image": "boot.img",
+            "image": "boot_XBH002_LVDS.img",
             "is_full_image": false
         },
         {

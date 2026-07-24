@@ -1122,9 +1122,43 @@ class FirmwareUpgradeDialog(QDialog):
                 self._set_operation_running(False)
                 return
 
-            # 步骤3: 烧录
-            self.log_signal.emit("[流程] 步骤3: 开始烧录...")
-            self._start_flash_thread(upgrade_tool, partitions, download_dir, real_location_id)
+            # 步骤3: 下载完成，再次检查升级设备（避免下载期间设备超时退出 Loader）
+            self.log_signal.emit("[流程] 步骤3: 下载完成，检查升级设备...")
+            flash_location_id = None
+
+            try:
+                result = subprocess.run(
+                    [upgrade_tool, 'LD'],
+                    capture_output=True, text=True, timeout=5,
+                    startupinfo=_hidden_startupinfo()
+                )
+                output = (result.stdout + result.stderr).strip()
+                if output and ('Loader' in output or 'Maskrom' in output):
+                    match = re.search(r'LocationID=(\w+)', output)
+                    if match:
+                        flash_location_id = match.group(1)
+                        self.log_signal.emit(f"[流程] 检测到升级设备 LocationID={flash_location_id}，直接烧录")
+            except Exception as e:
+                self.log_signal.emit(f"[流程] 检查设备异常: {str(e)}")
+
+            # 步骤4: 如果没有升级设备，才 reboot loader
+            if not flash_location_id:
+                if device_id:
+                    self.log_signal.emit(f"[流程] 未检测到升级设备，发送 reboot loader 到设备 {device_id}...")
+                    try:
+                        result = self.adb.run_command(f'-s {device_id} reboot loader')
+                        if result.get('success'):
+                            self.log_signal.emit("[流程] reboot loader 命令已发送")
+                        else:
+                            self.log_signal.emit(f"[流程] reboot loader 失败: {result.get('stderr', 'unknown error')}")
+                    except Exception as e:
+                        self.log_signal.emit(f"[流程] reboot loader 异常: {str(e)}")
+                else:
+                    self.log_signal.emit("[流程] 警告: 未连接ADB设备且未检测到升级设备")
+
+            # 步骤5: 烧录
+            self.log_signal.emit("[流程] 步骤5: 开始烧录...")
+            self._start_flash_thread(upgrade_tool, partitions, download_dir, flash_location_id)
 
         except Exception as e:
             tb = traceback.format_exc()

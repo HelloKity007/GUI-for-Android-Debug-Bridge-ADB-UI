@@ -32,29 +32,42 @@ class GPIOCalculator:
         "rk30xx": "Rockchip RK30xx (RK3066等)",
     }
 
-    # MCU GPIO映射 - 简化格式 PA0-PZ7 (动态生成)
-    # PA0-PA7 = 0-7, PB0-PB7 = 8-15, PC0-PC7 = 16-23, ...
-    MCU_GPIO_MAP = {}
-    MCU_NAME_MAP = {}
+    # MCU GPIO基数: MCU_GRP_PIN(group, pin) = ((group + 1) << 16) + pin
+    # PAx = (0+1)<<16 + x = 0x10000 + x = 65536 + x
+    # PBx = (1+1)<<16 + x = 0x20000 + x = 131072 + x
+    MCU_GROUP_BASE = 0  # MCUA_GROUP_BASE for GD32F310
+    MCU_PIN_PER_GROUP = 32  # 每端口32个pin (0-31)
+
+    @staticmethod
+    def mcu_grp_pin(group, pin):
+        """MCU GPIO编号计算: ((group + 1) << 16) + pin"""
+        return ((group + 1) << 16) + pin
 
     @classmethod
-    def _init_mcu_maps(cls):
-        """初始化MCU GPIO映射表 (PA-PZ)"""
-        if cls.MCU_GPIO_MAP:
-            return  # 已初始化
-        letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        for i, letter in enumerate(letters):
-            for pin in range(8):
-                number = i * 8 + pin
-                name = f"P{letter}{pin}"
-                cls.MCU_GPIO_MAP[number] = name
-                cls.MCU_NAME_MAP[name] = number
+    def mcu_name_to_number(cls, port_letter, pin):
+        """MCU GPIO名称转编号: PAx -> number"""
+        group = ord(port_letter) - ord('A') + cls.MCU_GROUP_BASE
+        return cls.mcu_grp_pin(group, pin)
+
+    @classmethod
+    def mcu_number_to_parts(cls, number):
+        """MCU GPIO编号转 (port_letter, pin) 或 None"""
+        if not isinstance(number, int) or number < 0x10000:
+            return None
+        group_plus_1 = number >> 16
+        pin = number & 0xFFFF
+        if pin >= cls.MCU_PIN_PER_GROUP:
+            return None
+        group_index = group_plus_1 - 1 - cls.MCU_GROUP_BASE
+        if 0 <= group_index < 26:
+            return (chr(ord('A') + group_index), pin)
+        return None
 
     @staticmethod
     def parse_gpio_name(name, platform_hint=None):
         """
         解析GPIO名称，返回(number, platform)
-        支持格式：PA0, PB7, GPIO0_B0, GPIO3_D2, 或纯数字
+        支持格式：PA0, PB15, GPIO0_B0, GPIO3_D2, 或纯数字
         platform_hint: "soc" 或 "mcu"，用于区分PA0等歧义名称
         """
         name = name.strip().upper()
@@ -73,14 +86,14 @@ class GPIOCalculator:
                 offset = GPIOCalculator.SOC_BANK_OFFSET.get(port, 0)
                 return bank * 32 + offset + pin, "soc"
 
-        # MCU格式: PA0, PB7, PC3, PD5, ..., PZ7
+        # MCU格式: PA0, PB15, PC3, PD5, ..., PF31
         short_match = re.match(r'P([A-Z])(\d+)', name)
         if short_match:
             port = short_match.group(1)
             pin = int(short_match.group(2))
-            if pin <= 7:
-                port_index = ord(port) - ord('A')
-                return port_index * 8 + pin, "mcu"
+            if pin < GPIOCalculator.MCU_PIN_PER_GROUP:
+                number = GPIOCalculator.mcu_name_to_number(port, pin)
+                return number, "mcu"
 
         return None, None
 
@@ -94,7 +107,10 @@ class GPIOCalculator:
             return None
 
         if platform == "mcu":
-            return GPIOCalculator.MCU_GPIO_MAP.get(number)
+            parts = GPIOCalculator.mcu_number_to_parts(number)
+            if parts:
+                return f"P{parts[0]}{parts[1]}"
+            return None
         elif platform == "soc":
             bank = number // 32
             remainder = number % 32
@@ -135,10 +151,6 @@ class GPIOCalculator:
                 return name, platform, None
             except ValueError:
                 return None, None, "请输入有效的数字"
-
-
-# 初始化MCU映射
-GPIOCalculator._init_mcu_maps()
 
 
 class GPIOCommandBuilder:
